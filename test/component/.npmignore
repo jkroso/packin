@@ -1,0 +1,11 @@
+/.gitignore
+/.npmignore
+/node_modules
+/components
+/build
+/docs
+/test
+/Makefile
+/component.json
+*.sublime-project
+*.sublime-workspace

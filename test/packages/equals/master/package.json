@@ -1,0 +1,35 @@
+{
+  "name": "equals",
+  "version": "0.3.0",
+  "description": "Check if two values are deeply equivalent",
+  "main": "src/index.js",
+  "dependencies": {
+    "type": "https://github.com/jkroso/type/archive/08b3600.tar.gz"
+  },
+  "devDependencies": {
+    "bigfile": "0.3.1",
+    "chai": "1.4.2",
+    "mocha": "1.8.2",
+    "sourcegraph": "0.5.0"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jkroso/equals.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jkroso/equals/issues"
+  },
+  "keywords": [
+    "equality",
+    "equal",
+    "same",
+    "equivalent",
+    "equivalence",
+    "="
+  ],
+  "author": "Jakeb Rosoman",
+  "license": "MIT"
+}

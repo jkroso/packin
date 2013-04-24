@@ -1,0 +1,33 @@
+{
+  "name": "graph",
+  "version": "0.1.0",
+  "description": "declarative function composition inspired by prismatics graph library",
+  "dependencies": {
+    "toposort": "git://github.com/marcelklehr/toposort"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "chai": "*",
+    "bigfile": "~0.3.0",
+    "sourcegraph": "~0.5.0"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jkroso/graph.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jkroso/graph/issues"
+  },
+  "keywords": [
+    "control-flow",
+    "composition",
+    "function",
+    "compose",
+    "graph"
+  ],
+  "author": "Jake Rosoman",
+  "license": "MIT"
+}

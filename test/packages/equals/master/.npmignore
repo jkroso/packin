@@ -1,0 +1,14 @@
+/.gitignore
+/.npmignore
+/node_modules
+/components
+/build
+/docs
+/test
+/dist
+/Readme.md
+/.bigfile-config.js
+/Makefile
+/component.json
+*.sublime-project
+*.sublime-workspace
