@@ -43,7 +43,7 @@ _With npm_
 
 ```bash
 $ npm install
-$ make test
+$ node test/server & make test
 ```
 
 ## License 
