@@ -15,15 +15,8 @@ var fs = require('fs')
   , debug = require('debug')('packin')
 
 var cacheDir = process.env.HOME + '/.packin/cache'
-var defaultPriority = ['env.json', 'component.json', 'package.json']
 
-module.exports = function(dir, opts){
-	if (typeof dir != 'string') opts = dir, dir = opts.target
-	opts || (opts = {})
-	'folder' in opts || (opts.folder = 'deps')
-	'priority' in opts || (opts.priority = defaultPriority)
-	return install(dir, opts)
-}
+module.exports = install
 
 function merge(a, b){
 	if (b) for (var k in b) if (!(k in a)) {

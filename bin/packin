@@ -1,0 +1,44 @@
+#!/usr/bin/env node
+
+var program = require('commander')
+  , path = require('path')
+  , fs = require('fs')
+  , all = require('when-all')
+  , install = require('..')
+
+var defaultmeta = ['env.json', 'component.json', 'package.json']
+
+program.version(require('../package').version)
+	.usage('[options]')
+	.option('-d, --no-dev', 'ignore development dependencies')
+	.option('-t, --target <dir>', 'name of the directory for installed packages', 'deps')
+	.option('-m, --meta <files...>', 'list of meta files to read', list, defaultmeta)
+
+function list (args) {
+	return args.split(',')
+}
+
+program.on('--help', function () {
+	write('  Examples:')
+	write('')
+	write('    # to emulate npm')
+	write('    $ packin -m package.json -t node_modules')
+	write('')
+	write('    # to use components with browserify')
+	write('    $ packin -m component.json,package.json -t node_modules')
+	write('')
+})
+
+function write(txt){
+	process.stdout.write(txt+'\n')
+}
+
+program.parse(process.argv)
+
+install(process.cwd(), {
+	priority: program.meta,
+	dev: program.dev,
+	folder: program.target
+}).read(function(){
+	console.log('done!')
+})

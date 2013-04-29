@@ -15,7 +15,8 @@
     "concat-stream": "~0.1.1",
     "semver": "~1.1.4",
     "JSONStream": "~0.6.4",
-    "debug": "git://github.com/jkroso/debug"
+    "debug": "https://github.com/jkroso/debug/archive/master.tar.gz",
+    "commander": "~1.1.1"
   },
   "devDependencies": {
     "express": "~3.2.0",
@@ -42,5 +43,8 @@
     "module"
   ],
   "author": "Jake Rosoman",
-  "license": "MIT"
+  "license": "MIT",
+  "bin": {
+    "packin": "bin/packin"
+  }
 }
