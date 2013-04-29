@@ -1,6 +1,6 @@
 {
   "name": "packin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "a simple package manager",
   "dependencies": {
     "mkdirp": "~0.3.5",
@@ -16,8 +16,14 @@
     "semver": "~1.1.4",
     "JSONStream": "~0.6.4",
     "debug": "https://github.com/jkroso/debug/archive/master.tar.gz",
-    "commander": "~1.1.1"
+    "commander": "~1.1.1",
+    "path": "https://github.com/jkroso/path/archive/master.tar.gz"
   },
+  "bundledDependencies": [
+    "path",
+    "debug",
+    "rmdir"
+  ],
   "devDependencies": {
     "express": "~3.2.0",
     "fs-equals": "~0.1.2",
