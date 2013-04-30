@@ -85,6 +85,15 @@ function npmUrl(name, version){
 	if (/^\d+\.\d+\.\d+$/.test(version)) {
 		return 'http://registry.npmjs.org/'+name+'/-/'+name+'-'+version+'.tgz'
 	}
+	// straight up url
+	if (/^\w+:\/\//.test(version)) {
+		return version
+	}
+	// github shorthand
+	if (/^(\w+\/[\w\-]+)(?:@(\d+\.\d+\.\d))?/.test(version)) {
+		return 'http://github.com/'+RegExp.$1+'/tarball/'+(RegExp.$2 || 'master')
+	}
+	// semver magic
 	return download('http://registry.npmjs.org/'+name).then(function(response){
 		var p = new Promise
 		response

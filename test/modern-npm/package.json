@@ -1,0 +1,28 @@
+{
+  "name": "detect",
+  "version": "0.1.0",
+  "description": "find the first item within an array that passes a predicate test. (async, sync, or series)",
+  "dependencies": {
+    "laissez-faire": "jkroso/laissez-faire@0.12.1",
+    "when": "https://github.com/jkroso/when/tarball/1.0.0"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jkroso/detect.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jkroso/detect/issues"
+  },
+  "keywords": [
+    "async",
+    "find",
+    "detect",
+    "first",
+    "array"
+  ],
+  "author": "Jake Rosoman",
+  "license": "MIT"
+}

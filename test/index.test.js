@@ -137,3 +137,23 @@ describe('package.json', function () {
 		}).node(done)
 	})
 })
+
+describe('modern-npm', function () {
+	var dir = __dirname+'/modern-npm'
+	afterEach(function (done) {
+		rmdir(dir+'/node_modules', done)
+	})
+
+	it('should love it', function (done) {
+		install({
+			target: dir,
+			priority: ['package.json'],
+			folder: 'node_modules',
+			dev: false
+		}).then(function(){
+			exists(dir+'/node_modules/when').should.be.true
+			exists(dir+'/node_modules/laissez-faire').should.be.true
+			require(dir+'/async').should.be.a('function')
+		}).node(done)
+	})
+})
