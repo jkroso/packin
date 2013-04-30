@@ -21,12 +21,13 @@ function rmdir(dir, cb){
 }
 
 describe('install', function () {
+	var dir = __dirname+'/simple'
 	afterEach(function (done) {
 		rmdir(__dirname+'/simple/deps', done)
 	})
 
 	it('should install dependencies', function (done) {
-		install(__dirname+'/simple').then(function(){
+		install(dir).then(function(){
 			return equal(
 				__dirname+'/simple/deps/equals',
 				__dirname+'/packages/equals/master',
@@ -54,6 +55,16 @@ describe('install', function () {
 	it('unless told to include them', function (done) {
 		install(__dirname+'/simple', {dev: true}).then(function(){
 			exists(__dirname+'/simple/deps/type').should.be.true
+		}).node(done)
+	})
+
+	it('should fix misdirected symlinks', function (done) {
+		install(dir).then(function(){
+			fs.unlinkSync(dir+'/deps/equals')
+			fs.symlinkSync('/some/path/that/probably/no/good.coffee', dir+'/deps/equals')
+			return install(dir).then(function(){
+				fs.readlinkSync(dir+'/deps/equals').should.not.include('no/good.coffe')
+			})
 		}).node(done)
 	})
 })

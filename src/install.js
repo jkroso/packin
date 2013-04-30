@@ -9,6 +9,8 @@ var fs = require('fs')
   , promisify = require('promisify')
   , mkdirp = promisify(require('mkdirp'))
   , link = promisify(fs.symlink)
+  , readLink = promisify(fs.readlink)
+  , rmfile = promisify(fs.unlink)
   , rmdir = promisify(require('rmdir'))
   , getDeps = require('./get-deps')
   , untar = require('untar')
@@ -17,13 +19,6 @@ var fs = require('fs')
 var cacheDir = process.env.HOME + '/.packin/cache'
 
 module.exports = install
-
-function merge(a, b){
-	if (b) for (var k in b) if (!(k in a)) {
-		a[k] = b[k]
-	}
-	return a
-}
 
 /**
  * link dependencies to a package. Install new packages as 
@@ -54,8 +49,14 @@ function install(dir, opts){
 				// link to dep
 				.then(function(){
 					var sym = path.join(depsDir, name)
-					return exists(sym).then(function(yes){
-						if (!yes) return link(pkg, sym)
+					return readLink(sym).then(function(dest){
+						if (dest != pkg) {
+							debug('correcting symlink %p', sym)
+							return rmfile(sym).then(link.bind(null, pkg, sym))
+						}
+					}, function(e){
+						if (e.code != 'ENOENT') throw new Error(e.message)
+						return link(pkg, sym)
 					})
 				})
 				// fail tidily
@@ -79,4 +80,11 @@ function exists(path){
 
 function unzip(pkg){
 	return pkg.pipe(zlib.createGunzip())
+}
+
+function merge(a, b){
+	if (b) for (var k in b) if (!(k in a)) {
+		a[k] = b[k]
+	}
+	return a
 }

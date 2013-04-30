@@ -30,6 +30,8 @@ function deps(dir, opts){
 		return deps[file](dir, opts).read(function(d){
 			debug('%p depends on %j', dir, d)
 		})
+	}, function(e){
+		throw new Error('no meta file detected for '+dir)
 	})
 }
 
