@@ -1,0 +1,6 @@
+{
+	"name": "bad-deps",
+	"dependencies": {
+		"when-all": "~0.0.1"
+	}
+}

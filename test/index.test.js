@@ -156,15 +156,32 @@ describe('modern-npm', function () {
 	})
 
 	it('should love it', function (done) {
-		install({
-			target: dir,
+		install(dir, {
 			priority: ['package.json'],
-			folder: 'node_modules',
-			dev: false
+			folder: 'node_modules'
 		}).then(function(){
 			exists(dir+'/node_modules/when').should.be.true
 			exists(dir+'/node_modules/laissez-faire').should.be.true
+			exists(dir+'/node_modules/find').should.be.true
 			require(dir+'/async').should.be.a('function')
 		}).node(done)
+	})
+})
+
+describe('invalid npm deps', function () {
+	var dir = __dirname+'/bad-npm/invalid-version'
+	afterEach(function (done) {
+		rmdir(dir+'/node_modules', done)
+	})
+
+	it('should error', function (done) {
+		install(dir, {
+			priority: ['package.json'],
+			folder: 'node_modules'
+		}).otherwise(function(e){
+			e.should.be.an.instanceOf(Error)
+			e.message.should.include('not in npm')
+			done()
+		})
 	})
 })

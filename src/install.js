@@ -2,10 +2,10 @@
 var fs = require('fs')
   , promise = require('laissez-faire')
   , download = require('./download')
-  , zlib = require('zlib')
   , path = require('path')
+  , join = path.join
   , all = require('when-all/naked')
-  , each = require('foreach/async/promise')
+  , each = require('foreach/series/promise')
   , promisify = require('promisify')
   , mkdirp = promisify(require('mkdirp'))
   , link = promisify(fs.symlink)
@@ -13,22 +13,25 @@ var fs = require('fs')
   , rmfile = promisify(fs.unlink)
   , rmdir = promisify(require('rmdir'))
   , getDeps = require('./get-deps')
-  , untar = require('untar')
   , debug = require('debug')('packin')
 
-var cacheDir = process.env.HOME + '/.packin/cache'
+var cache = process.env.HOME + '/.packin/cache'
 
 module.exports = install
 
 /**
  * link dependencies to a package. Install new packages as 
- * necessary.
- * (String) -> Promise nil 
+ * necessary
+ * 
+ * @param {String} dir
+ * @param {Object} opts
+ * @return {Promise}
  */
 
 function install(dir, opts){
 	var depsDir = dir + '/' + opts.folder
 	return all(getDeps(dir, opts), mkdirp(depsDir)).spread(function(env){
+		debug('%p depends on %j', dir, env)
 		var deps = env.production || {}
 		// disable dev after the first iteration
 		if (opts.dev) {
@@ -37,26 +40,28 @@ function install(dir, opts){
 			deps = merge(deps, env.development)
 		}
 		return each(deps, function(url, name){
-			var pkg = path.join(cacheDir, encodeURIComponent(url))
+			var path = url.replace(/^\w+:\/\//, '')
+			var pkg = join(cache, encodeURIComponent(path))
 			return exists(pkg)
 				.then(function(yes){
-					debug('%p already installed? %s', pkg, yes)
-					if (!yes) return download(url)
-						.then(unzip)
-						.then(untar.bind(null, pkg))
+					if (!yes) return download(url, pkg)
+					debug('%p is already installed', url)
 				})
 				.then(install.bind(null, pkg, opts))
 				// link to dep
 				.then(function(){
-					var sym = path.join(depsDir, name)
+					var sym = join(depsDir, name)
 					return readLink(sym).then(function(dest){
 						if (dest != pkg) {
 							debug('correcting symlink %p', sym)
 							return rmfile(sym).then(link.bind(null, pkg, sym))
 						}
 					}, function(e){
-						if (e.code != 'ENOENT') throw new Error(e.message)
-						return link(pkg, sym)
+						switch (e.code) {
+							case 'ENOENT': return link(pkg, sym)
+							case 'EINVAL': return console.warn('remove %s and try again', sym)
+							throw new Error(e.message)
+						}
 					})
 				})
 				// fail tidily
@@ -69,17 +74,15 @@ function install(dir, opts){
 
 /**
  * check if the file/dir exists
- * (String) -> Promise Boolean
+ * 
+ * @param {String} path
+ * @return {Promise}
  */
 
 function exists(path){
 	return promise(function(fulfill){
 		fs.exists(path, fulfill)
 	})
-}
-
-function unzip(pkg){
-	return pkg.pipe(zlib.createGunzip())
 }
 
 function merge(a, b){

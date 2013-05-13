@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "description": "find the first item within an array that passes a predicate test. (async, sync, or series)",
   "dependencies": {
-    "laissez-faire": "jkroso/laissez-faire@0.12.1",
-    "when": "https://github.com/jkroso/when/tarball/1.0.0"
+    "laissez-faire": "jkroso/laissez-faire@0.12.2",
+    "when": "https://github.com/jkroso/when/tarball/1.0.0",
+    "find": "git://github.com/component/find"
   },
   "scripts": {
     "test": "make test"

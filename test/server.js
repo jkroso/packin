@@ -13,11 +13,6 @@ var app = express();
 
 // all environments
 app.set('port', process.env.PORT || 3000);
-// app.use(express.compress({
-// 	filter: function(req, res){
-// 	  return true
-// 	}
-// }))
 app.use(express.favicon());
 app.use(express.logger('dev'));
 app.use(express.bodyParser());
@@ -33,6 +28,7 @@ app.get('/:package/:version', function(req, res){
 	var pkg = req.params.package
 	var version = req.params.version
 	var dir = path.join(__dirname, 'packages', pkg, version)
+	res.set('content-encoding', 'gzip')
 	spawn('tar', ['c', dir]).stdout
 		.pipe(zlib.createGzip())
 		.pipe(res)

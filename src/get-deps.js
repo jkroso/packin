@@ -5,13 +5,12 @@ var detect = require('detect/series')
   , parseJSON = require('JSONStream').parse
   , Promise = require('laissez-faire/full')
   , semver = require('semver')
-  , valid = semver.valid
   , read = promisify(fs.readFile)
   , concat = require('concat-stream')
   , path = require('path')
   , all = require('when-all/object')
-  , download = require('./download')
-  , debug = require('debug')('packin:get-deps')
+  , download = require('./download').get
+  , debug = require('debug')('packin')
 
 module.exports = deps
 
@@ -27,9 +26,7 @@ function deps(dir, opts){
 		fs.exists(path.join(dir, file), cb)
 	}).then(function(file){
 		debug('%p uses %s for meta data', dir, file)
-		return deps[file](dir, opts).read(function(d){
-			debug('%p depends on %j', dir, d)
-		})
+		return deps[file](dir, opts)
 	}, function(e){
 		throw new Error('no meta file detected for '+dir)
 	})
@@ -41,17 +38,17 @@ deps['env.json'] = function(dir){
 
 deps['component.json'] = function(dir, opts){
 	return readJSON(dir+'/component.json').then(function(json){
-		var deps = {
+		return all({
 			production: normalizeComponent(json.dependencies),
 			development: opts.dev && normalizeComponent(json.development)
-		}
-		return all(deps)
+		})
 	})
 }
 
 function normalizeComponent(deps){
+	if (!deps) return
 	var res = {}
-	if (deps) for (var name in deps) {
+	for (var name in deps) {
 		var short = name.split('/')[1]
 		res[short] = componentUrl(name, deps[name]);
 	}
@@ -75,14 +72,14 @@ deps['package.json'] = function(dir, opts){
 }
 
 function normalizeNpm(deps){
-	if (deps) for (var name in deps) {
+	if (!deps) return
+	for (var name in deps) {
 		deps[name] = npmUrl(name, deps[name])
 	}
-	return all(deps || {})
+	return all(deps)
 }
 
 function npmUrl(name, version){
-	// if (!valid(version)) throw new Error('invalid semver: '+name+'@'+version)
 	// explicit version
 	if (/^\d+\.\d+\.\d+$/.test(version)) {
 		return 'http://registry.npmjs.org/'+name+'/-/'+name+'-'+version+'.tgz'
@@ -99,13 +96,13 @@ function npmUrl(name, version){
 	return download('http://registry.npmjs.org/'+name).then(function(response){
 		var p = new Promise
 		response
-			.pipe(parseJSON(['versions', true]))
+			.pipe(parseJSON(['versions', match(version)]))
 			.pipe(concat(done))
 
 		function done(e, versions){
 			if (e) return p.reject(e)
-			if (!versions.length) {
-				return p.reject(Error('nothing in npm.org matching '+name+'@'+version))
+			if (!versions || !versions.length) {
+				return p.reject(new Error(name+'@'+version+' not in npm'))
 			}
 			var latest = versions.sort(function(a,b){
 				return semver.rcompare(a.version, b.version)

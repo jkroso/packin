@@ -1,9 +1,11 @@
 REPORTER=dot
+
 test:
 	@node_modules/.bin/mocha test/*.test.js \
 		--reporter $(REPORTER) \
 		--bail \
-		--timeout 10000
+		--timeout 15s \
+		--slow 3s
 
 clean:
 	rm -rf test/npm/node_modules
