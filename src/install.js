@@ -48,6 +48,10 @@ function install(dir, opts){
 					debug('%p is already installed', url)
 				})
 				.then(install.bind(null, pkg, opts))
+				// fail tidily
+				.then(null, function(e){
+					return rmdir(pkg).always(function(){ throw e })
+				})
 				// link to dep
 				.then(function(){
 					var sym = join(depsDir, name)
@@ -59,14 +63,10 @@ function install(dir, opts){
 					}, function(e){
 						switch (e.code) {
 							case 'ENOENT': return link(pkg, sym)
-							case 'EINVAL': return console.warn('remove %s and try again', sym)
+							case 'EINVAL': debug('skipping %p since might be important', sym); break
 							throw new Error(e.message)
 						}
 					})
-				})
-				// fail tidily
-				.otherwise(function(e){
-					return rmdir(pkg).always(function(){ throw e })
 				})
 		})
 	})

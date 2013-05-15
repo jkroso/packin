@@ -4,7 +4,7 @@
   "description": "a simple package manager",
   "dependencies": {
     "mkdirp": "~0.3.5",
-    "laissez-faire": "~0.12.2",
+    "laissez-faire": "~0.12.3",
     "hyperquest": "~0.1.4",
     "when-all": "~0.3.0",
     "promisify": "https://github.com/jkroso/promisify/archive/0.2.0.tar.gz",
