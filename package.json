@@ -17,7 +17,8 @@
     "JSONStream": "~0.6.4",
     "debug": "https://github.com/jkroso/debug/archive/master.tar.gz",
     "commander": "~1.1.1",
-    "path": "https://github.com/jkroso/path/archive/master.tar.gz"
+    "path": "https://github.com/jkroso/path/archive/master.tar.gz",
+    "github-latest": "~0.1.1"
   },
   "bundledDependencies": [
     "path",

@@ -1,44 +1,105 @@
 #!/usr/bin/env node
 
 var program = require('commander')
-  , path = require('path')
+  , install = require('../src/install')
   , fs = require('fs')
-  , all = require('when-all')
-  , install = require('..')
+  , ghtag = require('github-latest')
 
-var defaultmeta = ['env.json', 'component.json', 'package.json']
+program
+	.version(require('../package').version)
+	.usage('command [options]')
 
-program.version(require('../package').version)
-	.usage('[options]')
+program
+	.command('add [name] [url]')
+	.description('add a package to this packages dependencies')
+	.option('-d, --development', 'add as a development dependency')
+	.action(function(name, url, opts){
+		if (!url) url = name, name = null
+		if (!url) throw new Error('invalid arguments')
+		var pkg = process.cwd() + '/deps.json'
+		var json = fs.existsSync(pkg)
+			? require(pkg)
+			: {}
+		if (opts.development) {
+			var deps = json.development || (json.development = {})
+		} else {
+			var deps = json.production || (json.production = {})
+		}
+		if (/^([\-\w]+)\/([\-\w]+)(?:@(\d+\.\d+\.\d+))?$/.exec(url)) {
+			url = 'http://github.com/'+RegExp.$1+'/'+RegExp.$2+'/tarball/'
+			if (!name) name = RegExp.$2
+			if (RegExp.$3) {
+				url += RegExp.$3
+				save()
+			} else {
+				ghtag(RegExp.$1, RegExp.$2, function(e, tag){
+					if (e) throw e
+					url += (tag || 'master')
+					save()
+				})
+			}
+		}
+		function save(){
+			deps[name] = url
+			fs.writeFileSync(pkg, JSON.stringify(json, null, 2))
+		}
+	})
+
+program
+	.command('rm <name>')
+	.description('remove a package from this packages dependencies')
+	.option('-d, --development', 'add as a development dependency')
+	.option('-t, --target <dir>', 'dependency folder', 'deps')
+	.action(function(name, opts){
+		var cwd = process.cwd()
+		var pkg = cwd + '/deps.json'
+		var json = require(pkg)
+		var deps = opts.development
+			? json.development
+			: json.production
+		if (deps && name in deps) {
+			delete deps[name]
+			var file = cwd + '/' + program.target + '/' + name
+			try { fs.unlinkSync(file) }
+			catch (e) {}
+			fs.writeFileSync(pkg, JSON.stringify(json, null, 2))
+		}
+	})
+
+var defaultmeta = ['deps.json', 'component.json', 'package.json']
+
+program
+	.command('install')
+	.description('install this packages dependencies')
 	.option('-d, --no-dev', 'ignore development dependencies')
 	.option('-t, --target <dir>', 'name of the directory for installed packages', 'deps')
 	.option('-m, --meta <files...>', 'list of meta files to read', list, defaultmeta)
+	.on('--help', function () {
+		write('  Examples:')
+		write('')
+		write('    # to emulate npm')
+		write('    $ packin install -m package.json -t node_modules')
+		write('')
+		write('    # to use components with browserify')
+		write('    $ packin install -m component.json,package.json -t node_modules')
+		write('')
+	})
+	.action(function(opts){
+		install(process.cwd(), {
+			priority: opts.meta,
+			dev: opts.dev,
+			folder: opts.target
+		}).read(function(){
+			console.log('done!')
+		})
+	})
+
+program.parse(process.argv)
 
 function list (args) {
 	return args.split(',')
 }
 
-program.on('--help', function () {
-	write('  Examples:')
-	write('')
-	write('    # to emulate npm')
-	write('    $ packin -m package.json -t node_modules')
-	write('')
-	write('    # to use components with browserify')
-	write('    $ packin -m component.json,package.json -t node_modules')
-	write('')
-})
-
 function write(txt){
 	process.stdout.write(txt+'\n')
 }
-
-program.parse(process.argv)
-
-install(process.cwd(), {
-	priority: program.meta,
-	dev: program.dev,
-	folder: program.target
-}).read(function(){
-	console.log('done!')
-})
