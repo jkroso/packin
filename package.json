@@ -18,7 +18,8 @@
     "debug": "https://github.com/jkroso/debug/archive/master.tar.gz",
     "commander": "~1.1.1",
     "path": "https://github.com/jkroso/path/archive/master.tar.gz",
-    "github-latest": "~0.1.1"
+    "github-latest": "~0.1.1",
+    "writefile": "~0.1.1"
   },
   "bundledDependencies": [
     "path",
@@ -32,7 +33,8 @@
     "chai": "~1.5.0"
   },
   "scripts": {
-    "test": "make test"
+    "test": "make test",
+    "install": "bin/on-install.sh"
   },
   "repository": {
     "type": "git",
