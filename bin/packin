@@ -131,7 +131,7 @@ program
 	.command('as [name]')
 	.description('create a shortcut to this local package')
 	.action(function(name, opts){
-		if (!name) name = path.basename(cwd)
+		if (!name) name = path.basename(cwd).toLowerCase()
 		var locals = getLocals()
 		if (name in locals && locals[name] != cwd)
 			return print(name+' is currently assigned to '+locals[name]) 
@@ -140,9 +140,10 @@ program
 	})
 
 program
-	.command('unas <name>')
+	.command('unas [name]')
 	.description('clear the local path for <name>')
 	.action(function(name){
+		if (!name) name = path.basename(cwd).toLowerCase()
 		var locals = getLocals();
 		delete locals[name]
 		saveLocals(locals)
