@@ -15,7 +15,7 @@ var detect = require('detect/series')
 module.exports = deps
 
 /**
- * get an object representing the packages dependencies
+ * get a normalized deps.json
  *
  * @param {String} path to the package
  * @return {Promise} deps

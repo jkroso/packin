@@ -8,7 +8,7 @@ var fs = require('fs')
   , each = require('foreach/series/promise')
   , promisify = require('promisify')
   , mkdirp = promisify(require('mkdirp'))
-  , link = promisify(fs.symlink)
+  , symlink = promisify(fs.symlink)
   , readLink = promisify(fs.readlink)
   , rmfile = promisify(fs.unlink)
   , rmdir = promisify(require('rmdir'))
@@ -29,47 +29,72 @@ module.exports = install
  */
 
 function install(dir, opts){
-	var depsDir = dir + '/' + opts.folder
-	return all(getDeps(dir, opts), mkdirp(depsDir)).spread(function(env){
+	var folder = dir + '/' + opts.folder
+	return all(getDeps(dir, opts), mkdirp(folder)).spread(function(env){
 		debug('%p depends on %j', dir, env)
 		var deps = env.production || {}
 		// disable dev after the first iteration
 		if (opts.dev) {
-			opts = Object.create(opts)
 			opts.dev = false
 			deps = merge(deps, env.development)
 		}
 		return each(deps, function(url, name){
 			var path = url.replace(/^\w+:\/\//, '')
 			var pkg = join(cache, encodeURIComponent(path))
-			return exists(pkg)
-				.then(function(yes){
-					if (!yes) return download(url, pkg)
-					debug('%p is already installed', url)
-				})
-				.then(install.bind(null, pkg, opts))
-				// fail tidily
-				.then(null, function(e){
-					return rmdir(pkg).always(function(){ throw e })
-				})
-				// link to dep
-				.then(function(){
-					var sym = join(depsDir, name)
-					return readLink(sym).then(function(dest){
-						if (dest != pkg) {
-							debug('correcting symlink %p', sym)
-							return rmfile(sym).then(link.bind(null, pkg, sym))
-						}
-					}, function(e){
-						switch (e.code) {
-							case 'ENOENT': return link(pkg, sym)
-							case 'EINVAL': debug('skipping %p since might be important', sym); break
-							throw new Error(e.message)
-						}
-					})
-				})
+			return ensureExists(url, pkg, opts).then(function(){
+				return link(join(folder, name), pkg)
+			})
 		})
 	})
+}
+
+/**
+ * ensure a symlink exists
+ * 
+ * @param {String} from
+ * @param {String} to
+ * @return {Promise}
+ */
+
+function link(from, to){
+	return readLink(from).then(function(path){
+		if (path != to) {
+			debug('correcting symlink %p', from)
+			return rmfile(from).then(function(){
+				return symlink(to, from)
+			})
+		}
+	}, function(e){
+		switch (e.code) {
+			case 'ENOENT': return symlink(to, from)
+			case 'EINVAL': debug('skipping %p since might be important', from); break
+			throw new Error(e.message)
+		}
+	})
+}
+
+/**
+ * ensure a package is properly installed
+ * 
+ * @param {String} url
+ * @param {String} dest
+ * @param {Object} opts
+ * @return {Promise}
+ */
+
+function ensureExists(url, dest, opts){
+	return exists(dest)
+		.then(function(yes){
+			if (!yes) return download(url, dest)
+			debug('%p is already installed', url)
+		})
+		.then(function(){
+			return install(dest, opts)
+		})
+		// fail tidily
+		.then(null, function(e){
+			return rmdir(dest).always(function(){ throw e })
+		})
 }
 
 /**
