@@ -10,37 +10,47 @@ program
 	.usage('command [options]')
 
 program
-	.command('add [name] [url]')
+	.command('add <key:value>')
 	.description('add a package to this packages dependencies')
 	.option('-d, --development', 'add as a development dependency')
-	.action(function(name, url, opts){
-		if (!url) url = name, name = null
-		if (!url) throw new Error('invalid arguments')
+	.action(function(kv, opts){
+		/([\-\w\/]+)(?::([\-\w\/]+))?/.exec(kv)
+		if (RegExp.$2) {
+			var key = RegExp.$1
+			var value = RegExp.$2
+		} else {
+			var value = RegExp.$1
+		}
 		var pkg = process.cwd() + '/deps.json'
 		var json = fs.existsSync(pkg)
 			? require(pkg)
 			: {}
+
+		// --development
 		if (opts.development) {
 			var deps = json.development || (json.development = {})
 		} else {
 			var deps = json.production || (json.production = {})
 		}
-		if (/^([\-\w]+)\/([\-\w]+)(?:@(\d+\.\d+\.\d+))?$/.exec(url)) {
-			url = 'http://github.com/'+RegExp.$1+'/'+RegExp.$2+'/tarball/'
-			if (!name) name = RegExp.$2
+
+		// github shorthand
+		if (/^([\-\w]+)\/([\-\w]+)(?:@(\d+\.\d+\.\d+))?$/.exec(value)) {
+			value = 'http://github.com/'+RegExp.$1+'/'+RegExp.$2+'/tarball/'
+			if (!key) key = RegExp.$2
 			if (RegExp.$3) {
-				url += RegExp.$3
+				value += RegExp.$3
 				save()
 			} else {
 				ghtag(RegExp.$1, RegExp.$2, function(e, tag){
 					if (e) throw e
-					url += (tag || 'master')
+					value += (tag || 'master')
 					save()
 				})
 			}
 		}
+
 		function save(){
-			deps[name] = url
+			deps[key] = value
 			fs.writeFileSync(pkg, JSON.stringify(json, null, 2))
 		}
 	})
