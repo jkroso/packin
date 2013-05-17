@@ -32,8 +32,8 @@ function deps(dir, opts){
 	})
 }
 
-deps['env.json'] = function(dir){
-	return readJSON(dir+'/env.json')
+deps['deps.json'] = function(dir){
+	return readJSON(dir+'/deps.json')
 }
 
 deps['component.json'] = function(dir, opts){
@@ -89,7 +89,7 @@ function npmUrl(name, version){
 		return version
 	}
 	// github shorthand
-	if (/^(\w+\/[\w\-]+)(?:@(\d+\.\d+\.\d))?/.test(version)) {
+	if (/^(\w+\/[\w\-]+)(?:@(\d+\.\d+\.\d+))?/.test(version)) {
 		return 'http://github.com/'+RegExp.$1+'/tarball/'+(RegExp.$2 || 'master')
 	}
 	// semver magic

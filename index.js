@@ -1,7 +1,7 @@
 
 var install = require('./src/install')
 
-var defaultPriority = ['env.json', 'component.json', 'package.json']
+var defaultPriority = ['deps.json', 'component.json', 'package.json']
 
 module.exports = function(dir, opts){
 	if (typeof dir != 'string') opts = dir, dir = opts.target
