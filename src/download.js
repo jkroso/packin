@@ -4,6 +4,7 @@ var promise = require('laissez-faire')
   , untar = require('untar')
   , zlib = require('zlib')
   , exec = require('child_process').exec
+  , log = require('./logger')
 
 module.exports = download
 download.get = response
@@ -18,6 +19,7 @@ download.get = response
 
 function download(url, dir){
 	var protocol = url.match(/^(\w+):\/\//)[1]
+	log.info('fetching', url)
 	if (protocol in handlers) return handlers[protocol](url, dir)
 	throw new Error('unsupported protocol '+protocol)
 }

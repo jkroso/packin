@@ -13,7 +13,7 @@ var fs = require('fs')
   , rmfile = promisify(fs.unlink)
   , rmdir = promisify(require('rmdir'))
   , getDeps = require('./get-deps')
-  , debug = require('debug')('packin')
+  , log = require('./logger')
 
 var cache = process.env.HOME + '/.packin/cache'
 
@@ -31,7 +31,7 @@ module.exports = install
 function install(dir, opts){
 	var folder = dir + '/' + opts.folder
 	return all(getDeps(dir, opts), mkdirp(folder)).spread(function(env){
-		debug('%p depends on %j', dir, env)
+		log.debug('%p depends on %j', dir, env)
 		var deps = env.production || {}
 		// disable dev after the first iteration
 		if (opts.dev) {
@@ -59,7 +59,7 @@ function install(dir, opts){
 function link(from, to){
 	return readLink(from).then(function(path){
 		if (path != to) {
-			debug('correcting symlink %p', from)
+			log.debug('correcting symlink %p', from)
 			return rmfile(from).then(function(){
 				return symlink(to, from)
 			})
@@ -67,7 +67,7 @@ function link(from, to){
 	}, function(e){
 		switch (e.code) {
 			case 'ENOENT': return symlink(to, from)
-			case 'EINVAL': debug('skipping %p since might be important', from); break
+			case 'EINVAL': log.info('skipping %p since might be important', from); break
 			throw new Error(e.message)
 		}
 	})
@@ -85,8 +85,10 @@ function link(from, to){
 function ensureExists(url, dest, opts){
 	return exists(dest)
 		.then(function(yes){
-			if (!yes) return download(url, dest)
-			debug('%p is already installed', url)
+			if (!yes) return download(url, dest).then(function(){
+				log.info('installed', url)
+			})
+			log.info('exists', '%p', url)
 		})
 		.then(function(){
 			return install(dest, opts)

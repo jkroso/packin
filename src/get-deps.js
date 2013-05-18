@@ -10,7 +10,7 @@ var detect = require('detect/series')
   , path = require('path')
   , all = require('when-all/object')
   , download = require('./download').get
-  , debug = require('debug')('packin')
+  , log = require('./logger')
 
 module.exports = deps
 
@@ -25,7 +25,7 @@ function deps(dir, opts){
 	return detect(opts.priority, function(file, cb){
 		fs.exists(path.join(dir, file), cb)
 	}).then(function(file){
-		debug('%p uses %s for meta data', dir, file)
+		log.warn('deps', '%p uses %s for meta data', dir, file)
 		return deps[file](dir, opts)
 	}, function(e){
 		throw new Error('no meta file detected for '+dir)

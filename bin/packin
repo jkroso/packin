@@ -7,6 +7,11 @@ var program = require('commander')
   , writeFile = require('writefile')
   , path = require('path')
   , mkdirp = require('mkdirp')
+  , log = require('../src/logger')
+
+// enable basic info
+
+log.enable('info')
 
 var home = process.env.HOME+'/.packin'
 var locals = home + '/locals.json'
@@ -23,6 +28,11 @@ if (!('dev' in cfg)) cfg.dev = true
 
 program
 	.version(require('../package').version)
+	.option('-v, --verbose', 'turn up the logging')
+
+program.on('verbose', function(){
+	log.enable('debug')
+})
 
 program
 	.command('add <key:url>')
@@ -122,9 +132,7 @@ program
 			priority: opts.meta,
 			dev: opts.dev,
 			folder: opts.target
-		}).read(function(){
-			console.log('done!')
-		})
+		}).throw()
 	})
 
 program
