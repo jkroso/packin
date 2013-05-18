@@ -8,6 +8,7 @@ var program = require('commander')
   , path = require('path')
   , mkdirp = require('mkdirp')
   , log = require('../src/logger')
+  , Promise = require('laissez-faire/full')
 
 // enable basic info
 
@@ -49,47 +50,58 @@ program
 		print('')
 	})
 	.action(function(kv, opts){
-		/([-.\w\/@]+)(?::([-.\w\/@]+))?/.exec(kv)
-		if (RegExp.$2) {
-			var key = RegExp.$1
-			var value = RegExp.$2
-		} else {
-			var value = RegExp.$1
-		}
-		var pkg = cwd + '/deps.json'
-		var json = fs.existsSync(pkg)
-			? require(pkg)
-			: {}
-
-		// --development
-		if (opts.development) {
-			var deps = json.development || (json.development = {})
-		} else {
-			var deps = json.production || (json.production = {})
-		}
-
-		// github shorthand
-		if (/^([-.\w]+)\/([-.\w]+)(?:@([-.\w]+|\d+\.\d+\.\d+))?$/.exec(value)) {
-			value = 'http://github.com/'+RegExp.$1+'/'+RegExp.$2+'/tarball/'
-			if (!key) key = RegExp.$2
-			if (RegExp.$3) {
-				value += RegExp.$3
-				save()
-			} else {
-				ghtag(RegExp.$1, RegExp.$2, function(e, tag){
-					if (e) log.info('error', 'unable to find the latest tag')
-					value += (tag || 'master')
-					save()
-				})
-			}
-		}
-
-		function save(){
-			log.info(key, value)
-			deps[key] = value
-			fs.writeFileSync(pkg, JSON.stringify(json, null, 2))
-		}
+		parseKeyValue.then(function(kv){
+			add(kv[0], kv[1], opts)
+		})
 	})
+
+function parseKeyValue(kv){
+	var p = new Promise;
+	/([-.\w\/@]+)(?::([-.\w\/@]+))?/.exec(kv)
+	if (RegExp.$2) {
+		var key = RegExp.$1
+		var value = RegExp.$2
+	} else {
+		var value = RegExp.$1
+	}
+
+	// github shorthand
+	if (/^([-.\w]+)\/([-.\w]+)(?:@([-.\w]+|\d+\.\d+\.\d+))?$/.exec(value)) {
+		value = 'http://github.com/'+RegExp.$1+'/'+RegExp.$2+'/tarball/'
+		if (!key) key = RegExp.$2
+		if (RegExp.$3) {
+			value += RegExp.$3
+			p.resolve([key,value])
+		} else {
+			ghtag(RegExp.$1, RegExp.$2, function(e, tag){
+				if (e) log.info('error', 'unable to find the latest tag (%s)', e.message)
+				value += (tag || 'master')
+				p.resolve([key,value])
+			})
+			log.info('fetching', 'latest tag for %s/%s', RegExp.$1, RegExp.$2)
+		}
+	}
+
+	return p
+}
+
+function add(key, url, opts){
+	var pkg = cwd + '/deps.json'
+	var json = fs.existsSync(pkg)
+		? require(pkg)
+		: {}
+
+	// --development
+	if (opts.development) {
+		var deps = json.development || (json.development = {})
+	} else {
+		var deps = json.production || (json.production = {})
+	}
+
+	log.info(key, url)
+	deps[key] = url
+	fs.writeFileSync(pkg, JSON.stringify(json, null, 2))
+}
 
 program
 	.command('ls')
@@ -133,9 +145,10 @@ program
 
 
 program
-	.command('install')
+	.command('install [key:url]')
 	.description('install this packages dependencies')
-	.option('-d, --no-dev', 'ignore development dependencies', !cfg.dev)
+	.option('-p, --no-dev', 'ignore development dependencies', !cfg.dev)
+	.option('-d, --development', 'install as a development dependency')
 	.option('-t, --target <dir>', 'name of the directory for installed packages', cfg.target)
 	.option('-m, --meta <files...>', 'list of meta files to read', list, cfg.meta)
 	.on('--help', function () {
@@ -148,12 +161,24 @@ program
 		print('    $ packin install -m component.json,package.json -t node_modules')
 		print('')
 	})
-	.action(function(opts){
-		install(cwd, {
-			priority: opts.meta,
-			dev: opts.dev,
-			folder: opts.target
-		}).throw()
+	.action(function(kv, opts){
+		if (kv) {
+			parseKeyValue(kv).then(function(kv){
+				var url = kv[1]
+				var name = kv[0]
+				add(name, url, opts)
+				install.one(url, path.join(cwd, opts.target, name), {
+					folder: opts.target,
+					priority: opts.meta
+				})
+			})
+		} else {
+			install(cwd, {
+				priority: opts.meta,
+				dev: opts.dev,
+				folder: opts.target
+			}).throw()
+		}
 	})
 
 program

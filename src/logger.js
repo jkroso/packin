@@ -102,7 +102,7 @@ var tokens = {
 		if (p[0] != '/') return p
 		var rel = path.relative(process.cwd(), p)
 		if (rel[0] == '.') return relHome(p)
-		return rel || '.'
+		return './' + rel
 	},
 	// uri
 	u: function(uri){

@@ -86,7 +86,9 @@ function link(from, to){
 	}, function(e){
 		switch (e.code) {
 			case 'ENOENT': return symlink(to, from)
-			case 'EINVAL': log.info('skipping %p since might be important', from); break
+			case 'EINVAL':
+				log.info('warning', 'not linking %p since its a hard file', from)
+				break
 			throw new Error(e.message)
 		}
 	})
