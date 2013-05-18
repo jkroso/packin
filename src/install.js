@@ -86,9 +86,9 @@ function ensureExists(url, dest, opts){
 	return exists(dest)
 		.then(function(yes){
 			if (!yes) return download(url, dest).then(function(){
-				log.info('installed', url)
+				log.info('installed', url.replace(/\w+:\/\//, ''))
 			})
-			log.info('exists', '%p', url)
+			log.info('exists', '%p', url.replace(/\w+:\/\//, ''))
 		})
 		.then(function(){
 			return install(dest, opts)
