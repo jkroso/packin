@@ -185,3 +185,21 @@ describe('invalid npm deps', function () {
 		})
 	})
 })
+
+describe('install.one(url, dest, opts)', function () {
+	var pkg = 'http://localhost:3000/equals/master'
+	var dir = __dirname + '/equals'
+	afterEach(function (done) {
+		exec('rm '+dir, done)
+	})
+
+	it('should install `url` to `dest`', function (done) {
+		install.one(pkg, dir).then(function(){
+			return equal(
+				__dirname+'/equals',
+				__dirname+'/packages/equals/master',
+				filterOpts
+			)
+		}).node(done)
+	})
+})

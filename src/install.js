@@ -18,10 +18,10 @@ var fs = require('fs')
 var cache = process.env.HOME + '/.packin/cache'
 
 module.exports = install
+install.one = linkPackage
 
 /**
- * link dependencies to a package. Install new packages as 
- * necessary
+ * install all dependecies of `dir`
  * 
  * @param {String} dir
  * @param {Object} opts
@@ -30,21 +30,40 @@ module.exports = install
 
 function install(dir, opts){
 	var folder = dir + '/' + opts.folder
-	return all(getDeps(dir, opts), mkdirp(folder)).spread(function(env){
-		log.debug('%p depends on %j', dir, env)
-		var deps = env.production || {}
+	return all(
+		getDeps(dir, opts),
+		mkdirp(folder)
+	).then(function(all){
+		var deps = all[0].production || {}
+		
 		// disable dev after the first iteration
 		if (opts.dev) {
 			opts.dev = false
-			deps = merge(deps, env.development)
+			deps = merge(deps, all[0].development)
 		}
+
+		log.debug('%p depends on %j', dir, deps)
+
 		return each(deps, function(url, name){
-			var path = url.replace(/^\w+:\/\//, '')
-			var pkg = join(cache, encodeURIComponent(path))
-			return ensureExists(url, pkg, opts).then(function(){
-				return link(join(folder, name), pkg)
-			})
+			return linkPackage(url, join(folder, name), opts)
 		})
+	})
+}
+
+/**
+ * link to a package. will install it if necessary
+ * 
+ * @param {String} url
+ * @param {String} name
+ * @param {Object} opts
+ * @return {Promise}
+ */
+
+function linkPackage(url, from, opts){
+	var path = url.replace(/^\w+:\/\//, '')
+	var pkg = join(cache, encodeURIComponent(path))
+	return ensureExists(url, pkg, opts).then(function(){
+		return link(from, pkg)
 	})
 }
 
