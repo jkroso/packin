@@ -106,7 +106,8 @@ function add(key, url, opts){
 program
 	.command('ls')
 	.description('display this packages dependencies')
-	.action(function(){
+	.option('-t, --target <dir>', 'dependency directory', cfg.target)
+	.action(function(opts){
 		var pkg = cwd + '/deps.json'
 		var deps = require(pkg)
 		console.log()
@@ -118,6 +119,24 @@ program
 			if (!keys.length) return
 			keys.forEach(function(key){
 				log.info(key, obj[key])
+			})
+			console.log()
+		}
+
+		var locals = getLocals()
+
+		var links = fs.readdirSync(cwd+'/'+opts.target).filter(function(file){
+			if (deps.production && file in deps.production
+			|| (deps.development && file in deps.development)
+			|| !(file in locals)) return false
+			var stat = fs.lstatSync(path.join(cwd, opts.target, file))
+			return stat.isSymbolicLink()
+		})
+
+		if (links.length) { 
+			links.forEach(function(file){
+				var pth = path.join(cwd, opts.target, file)
+				log.info(file, '%p -> %p', pth, fs.realpathSync(pth))
 			})
 			console.log()
 		}
