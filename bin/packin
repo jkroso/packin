@@ -50,7 +50,7 @@ program
 		print('')
 	})
 	.action(function(kv, opts){
-		parseKeyValue.then(function(kv){
+		parseKeyValue(kv).then(function(kv){
 			add(kv[0], kv[1], opts)
 		})
 	})
