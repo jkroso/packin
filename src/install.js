@@ -5,7 +5,7 @@ var fs = require('fs')
   , path = require('path')
   , join = path.join
   , all = require('when-all/naked')
-  , each = require('foreach/series/promise')
+  , each = require('foreach/async/promise')
   , promisify = require('promisify')
   , mkdirp = promisify(require('mkdirp'))
   , symlink = promisify(fs.symlink)
@@ -104,7 +104,8 @@ function link(from, to){
 
 function ensureExists(url, dest, opts){
 	var uri = url.replace(/\w+:\/\//, '')
-	return exists(dest)
+	if (uri in seen) return seen[uri]
+	return seen[uri] = exists(dest)
 		.then(function(yes){
 			if (!yes) return download(url, dest).then(function(){
 				log.info('installed', uri)
@@ -119,6 +120,8 @@ function ensureExists(url, dest, opts){
 			return rmdir(dest).always(function(){ throw e })
 		})
 }
+
+var seen = Object.create(null)
 
 /**
  * check if the file/dir exists
