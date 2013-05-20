@@ -12,9 +12,13 @@ var filterOpts = {
 	}
 }
 
-// afterEach(function (done) {
-// 	exec('rm -rf ~/.packin/cache', done)
-// })
+afterEach(function () {
+	// install uses an internal cache so it needs to be reloaded
+	// between tests since we are deleting files between runs
+	delete require.cache[require.resolve('..')]
+	delete require.cache[require.resolve('../src/install')]
+	install = require('..')
+})
 
 function rmdir(dir, cb){
 	exec('rm -rf '+dir, cb)
@@ -99,6 +103,7 @@ describe('custom install folders', function () {
 })
 
 describe('component.json', function () {
+	this.timeout(false)
 	var dir = __dirname+'/component'
 	afterEach(function (done) {
 		rmdir(__dirname+'/component/node_modules', done)
@@ -118,6 +123,7 @@ describe('component.json', function () {
 })
 
 describe('package.json', function () {
+	this.timeout(false)
 	var dir = __dirname+'/npm'
 	afterEach(function (done) {
 		rmdir(__dirname+'/npm/node_modules', done)
@@ -150,6 +156,7 @@ describe('package.json', function () {
 })
 
 describe('modern-npm', function () {
+	this.timeout(false)
 	var dir = __dirname+'/modern-npm'
 	afterEach(function (done) {
 		rmdir(dir+'/node_modules', done)
@@ -169,6 +176,7 @@ describe('modern-npm', function () {
 })
 
 describe('invalid npm deps', function () {
+	this.timeout(false)
 	var dir = __dirname+'/bad-npm/invalid-version'
 	afterEach(function (done) {
 		rmdir(dir+'/node_modules', done)
