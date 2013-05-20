@@ -15,7 +15,7 @@ var program = require('commander')
 log.enable('info')
 
 var home = process.env.HOME+'/.packin'
-var locals = home + '/locals.json'
+var links = home + '/links.json'
 var cwd = process.cwd()
 
 // load default config
@@ -181,41 +181,61 @@ program
 		}
 	})
 
-program
-	.command('as [name]')
-	.description('create a shortcut to this local package')
-	.action(function(name, opts){
-		if (!name) name = path.basename(cwd).toLowerCase()
-		var locals = getLocals()
-		if (name in locals && locals[name] != cwd)
-			return print(name+' is currently assigned to '+locals[name]) 
-		locals[name] = cwd
-		saveLocals(locals)
-	})
+/**
+ * register a local package so it can be linked to
+ * 
+ * @param {String} dir
+ * @param {String} [name=basename]
+ */
 
-program
-	.command('unas [name]')
-	.description('clear the local path for <name>')
-	.action(function(name){
-		if (!name) name = path.basename(cwd).toLowerCase()
-		var locals = getLocals();
-		delete locals[name]
-		saveLocals(locals)
-	})
+function register(dir, name){
+	if (!name) name = path.basename(cwd).toLowerCase()
+	var locals = getLocals()
+	if (name in locals && locals[name] != cwd)
+		return print(name+' is currently assigned to '+locals[name]) 
+	locals[name] = cwd
+	saveLocals(locals)
+}
+
+/**
+ * unregister a package from the linking index
+ * 
+ * @param {String} dir
+ * @param {String} [name=basename]
+ */
+
+function unregister(dir, name){
+	if (!name) name = path.basename(cwd).toLowerCase()
+	var locals = getLocals();
+	delete locals[name]
+	saveLocals(locals)
+}
+
+/**
+ * get the links index
+ * @return {Object}
+ */
 
 function getLocals(){
-	return fs.existsSync(locals)
-		? require(locals)
+	return fs.existsSync(links)
+		? require(links)
 		: {}
 }
 
+/**
+ * save the links index
+ * @param {Object} obj
+ */
+
 function saveLocals(obj){
-	writeFile(locals, JSON.stringify(obj, null, 2))
+	writeFile(links, JSON.stringify(obj, null, 2))
 }
 
 program
-	.command('locals')
-	.description('list local packages')
+	.command('links')
+	.description('list packages available for linking to')
+	// TODO
+	// .option('-u, --used', 'list the linked packages this one is using')
 	.action(function(){
 		var locals = getLocals()
 		var keys = Object.keys(locals)
@@ -230,15 +250,33 @@ program
 	})
 
 program
-	.command('link <local>')
-	.description('install a local package')
+	.command('link [name]')
+	.description('link to a local package or set this one up for linking')
 	.option('-t, --target <dir>', 'name of the directory for installed packages', cfg.target)
-	.action(function(name, opts){
+	.option('-n, --name <name>', 'set the name of this package when making it linkable')
+	.action(function(pkg, opts){
+		// make linkable
+		if (opts.name || !pkg) return register(cwd, opts.name)
+
 		var locals = getLocals()
-		if (!(name in locals)) return print(name+' is not registered')
+		if (!(pkg in locals)) return print(pkg+' is not registered')
 		var deps = cwd + '/' + opts.target
 		mkdirp.sync(deps)
-		fs.symlinkSync(locals[name], deps+'/'+name)
+		fs.symlinkSync(locals[pkg], deps+'/'+pkg)
+	})
+
+program
+	.command('unlink [name]')
+	.description('unlink a local package or unregister this one from the index')
+	.option('-t, --target <dir>', 'name of the directory for installed packages', cfg.target)
+	.option('-n, --name <name>', 'set the name of this package when making it linkable')
+	.action(function(pkg, opts){
+		// deregister this package
+		if (opts.name || !pkg) return unregister(cwd, opts.name)
+		
+		fs.unlink(cwd + '/' + opts.target + '/' + pkg, function(){
+			// ignore errors
+		})
 	})
 
 program.parse(process.argv)

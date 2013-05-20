@@ -12,8 +12,8 @@ if [[ ! -d "${PCKHOME}/-" ]]; then
 	mkdir "${PCKHOME}/-"
 fi
 
-if [[ ! -f "${PCKHOME}/locals.json" ]]; then
-	echo "{}" > "${PCKHOME}/locals.json"
+if [[ ! -f "${PCKHOME}/links.json" ]]; then
+	echo "{}" > "${PCKHOME}/links.json"
 fi
 
 declare -a json=(
