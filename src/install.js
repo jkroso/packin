@@ -15,7 +15,7 @@ var fs = require('fs')
   , getDeps = require('./get-deps')
   , log = require('./logger')
 
-var cache = process.env.HOME + '/.packin/cache'
+var cache = process.env.HOME + '/.packin/-'
 
 module.exports = install
 install.one = linkPackage
@@ -60,8 +60,7 @@ function install(dir, opts){
  */
 
 function linkPackage(url, from, opts){
-	var path = url.replace(/^\w+:\/\//, '')
-	var pkg = join(cache, encodeURIComponent(path))
+	var pkg = join(cache, url.replace(/^\w+:\/\//, ''))
 	return ensureExists(url, pkg, opts).then(function(){
 		return link(from, pkg)
 	})
@@ -104,12 +103,13 @@ function link(from, to){
  */
 
 function ensureExists(url, dest, opts){
+	var uri = url.replace(/\w+:\/\//, '')
 	return exists(dest)
 		.then(function(yes){
 			if (!yes) return download(url, dest).then(function(){
-				log.info('installed', url.replace(/\w+:\/\//, ''))
+				log.info('installed', uri)
 			})
-			log.info('exists', '%p', url.replace(/\w+:\/\//, ''))
+			log.info('exists', uri)
 		})
 		.then(function(){
 			return install(dest, opts)

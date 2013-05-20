@@ -4,19 +4,21 @@ printf "installing config to '~/.packin'\n"
 
 PCKHOME="${HOME}/.packin"
 
-if [[ -d "$PCKHOME" ]]; then
-	printf "'~/.packin' already exists\n"
-else
+if [[ ! -d "$PCKHOME" ]]; then
 	mkdir "$PCKHOME"
 fi
 
-if [[ ! -f "${PCKHOME}/locals.json" ]]; then
-	echo "{}" > "${HOME}/.packin/locals.json"
+if [[ ! -d "${PCKHOME}/-" ]]; then
+	mkdir "${PCKHOME}/-"
 fi
 
-declare -a cfg=(
+if [[ ! -f "${PCKHOME}/locals.json" ]]; then
+	echo "{}" > "${PCKHOME}/locals.json"
+fi
+
+declare -a json=(
 	"{"
-	"  \"target\": \"deps\","
+	"  \"target\": \"node_modules\","
 	"  \"meta\": ["
 	"    \"deps.json\","
 	"    \"component.json\","
@@ -27,7 +29,8 @@ declare -a cfg=(
 )
 
 if [[ ! -f "${PCKHOME}/config.json" ]]; then
-	printf "%s\n" "${cfg[@]}" > "${PCKHOME}/config.json"
+	printf "%s\n" "${json[@]}" > "${PCKHOME}/config.json"
 fi
 
-unset cfg
+unset json
+unset PCKHOME
