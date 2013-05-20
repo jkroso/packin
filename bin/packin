@@ -218,12 +218,14 @@ program
 	})
 	.action(function(kv, opts){
 		var deps = getAllDeps()
-		if (kv in deps) {
-			install.one(deps[kv], path.join(cwd, opts.target, kv), {
-				folder: opts.target,
-				priority: opts.meta
-			})
-		} else if (kv) {
+		if (kv) {
+			mkdirp.sync(opts.target)
+			if (kv in deps) {
+				return install.one(deps[kv], path.join(cwd, opts.target, kv), {
+					folder: opts.target,
+					priority: opts.meta
+				}).throw()
+			}
 			parseKeyValue(kv).then(function(kv){
 				var url = kv[1]
 				var name = kv[0]
@@ -231,7 +233,7 @@ program
 				install.one(url, path.join(cwd, opts.target, name), {
 					folder: opts.target,
 					priority: opts.meta
-				})
+				}).throw()
 			})
 		} else {
 			install(cwd, {
