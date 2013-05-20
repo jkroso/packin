@@ -85,11 +85,47 @@ function parseKeyValue(kv){
 	return p
 }
 
+/**
+ * getdeps object with production and development 
+ * dependencies merged together
+ * 
+ * @param {String} [json='./deps.json']
+ * @return {Object}
+ */
+
+function getAllDeps(json){
+	json = getDeps(json)
+	var deps = json.production || {}
+	if (json.development) for (var k in json.development) {
+		deps[k] = json.development[k]
+	}
+	return deps
+}
+
+/**
+ * get the deps.json file's data
+ * 
+ * @param {String} [file=./deps.json]
+ * @return {Object}
+ */
+
+function getDeps(file){
+	file || (file = cwd + '/deps.json')
+	if (!fs.existsSync(file)) return {}
+	return require(file)
+}
+
+/**
+ * add an entry to the deps.json file
+ * 
+ * @param {String} key
+ * @param {String} url
+ * @param {Object} opts
+ */
+
 function add(key, url, opts){
-	var pkg = cwd + '/deps.json'
-	var json = fs.existsSync(pkg)
-		? require(pkg)
-		: {}
+	var file = cwd + '/deps.json'
+	var json = getDeps(file)
 
 	// --development
 	if (opts.development) {
@@ -100,7 +136,7 @@ function add(key, url, opts){
 
 	log.info(key, url)
 	deps[key] = url
-	fs.writeFileSync(pkg, JSON.stringify(json, null, 2))
+	fs.writeFileSync(file, JSON.stringify(json, null, 2))
 }
 
 program
@@ -181,7 +217,13 @@ program
 		print('')
 	})
 	.action(function(kv, opts){
-		if (kv) {
+		var deps = getAllDeps()
+		if (kv in deps) {
+			install.one(deps[kv], path.join(cwd, opts.target, kv), {
+				folder: opts.target,
+				priority: opts.meta
+			})
+		} else if (kv) {
 			parseKeyValue(kv).then(function(kv){
 				var url = kv[1]
 				var name = kv[0]
