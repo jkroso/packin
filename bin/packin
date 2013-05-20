@@ -189,12 +189,17 @@ program
  */
 
 function register(dir, name){
-	if (!name) name = path.basename(cwd).toLowerCase()
+	if (!name) name = path.basename(dir).toLowerCase()
 	var locals = getLocals()
-	if (name in locals && locals[name] != cwd)
-		return print(name+' is currently assigned to '+locals[name]) 
-	locals[name] = cwd
+	if (name in locals && locals[name] != dir) {
+		log.info('error', '%s currently assigned to %s', name, locals[name]) 
+		return
+	}
+	locals[name] = dir
 	saveLocals(locals)
+	console.log()
+	log.info('linked', '%s -> %s', name, dir)
+	console.log()
 }
 
 /**
@@ -206,9 +211,16 @@ function register(dir, name){
 
 function unregister(dir, name){
 	if (!name) name = path.basename(cwd).toLowerCase()
-	var locals = getLocals();
+	var locals = getLocals()
+	if (!(name in locals)) {
+		log.info('warning', '%s is not registered', name)
+		return
+	}
 	delete locals[name]
 	saveLocals(locals)
+	console.log()
+	log.info('removed', '%s -> %s', name, dir)
+	console.log()
 }
 
 /**
@@ -244,7 +256,7 @@ program
 		keys.forEach(function(key){
 			var path = locals[key]
 			path = path.replace(process.env.HOME, '~')
-			print('  ' + key + ': ' + path)
+			log.info(key, path)
 		})
 		print('')
 	})
@@ -259,10 +271,16 @@ program
 		if (opts.name || !pkg) return register(cwd, opts.name)
 
 		var locals = getLocals()
-		if (!(pkg in locals)) return print(pkg+' is not registered')
+		if (!(pkg in locals)) {
+			log.info('error', '%s is not registered', pkg)
+			return
+		}
 		var deps = cwd + '/' + opts.target
 		mkdirp.sync(deps)
-		fs.symlinkSync(locals[pkg], deps+'/'+pkg)
+		var sym = deps+'/'+pkg
+		try { fs.unlinkSync(sym) } catch (e) {}
+		fs.symlinkSync(locals[pkg], sym)
+		log.info('linked', '%p -> %p', sym, locals[pkg])
 	})
 
 program
