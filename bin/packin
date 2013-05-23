@@ -219,11 +219,11 @@ program
 	.on('--help', function () {
 		print('  Examples:')
 		print('')
-		print('    # to emulate npm')
-		print('    $ packin install -m package.json -t node_modules')
+		print('    # to emulate npm install')
+		print('    $ packin install -m package.json')
 		print('')
-		print('    # to use components with browserify')
-		print('    $ packin install -m component.json,package.json -t node_modules')
+		print('    # to use components and npm packages')
+		print('    $ packin install -m component.json,package.json')
 		print('')
 	})
 	.action(function(kv, opts){
@@ -339,6 +339,16 @@ program
 	.description('link to a local package or register this one')
 	.option('-t, --target <dir>', 'name of the directory for installed packages', cfg.target)
 	.option('-n, --name <name>', 'set the name of this package when making it linkable')
+	.on('--help', function(){
+		print('  Examples:')
+		print('')
+		print('    # to make $PWD available as "my-module"')
+		print('    $ packin link -n my-module')
+		print('')
+		print('    # to install "my-module"')
+		print('    $ packin link my-module')
+		print('')
+	})
 	.action(function(pkg, opts){
 		// make linkable
 		if (opts.name || !pkg) return register(cwd, opts.name)
