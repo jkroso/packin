@@ -37,6 +37,7 @@ program.on('verbose', function(){
 
 program
 	.command('add <key:url>')
+	.usage('ad')
 	.description('add a package to this packages dependencies')
 	.option('-d, --development', 'add as a development dependency')
 	.on('--help', function(){
@@ -50,8 +51,17 @@ program
 		print('')
 	})
 	.action(function(kv, opts){
-		parseKeyValue(kv).then(function(kv){
+		parseKeyValue(kv).read(function(kv){
 			add(kv[0], kv[1], opts)
+		})
+	})
+
+program
+	.command('url <shorthand>')
+	.description('expand shorthand to a full url')
+	.action(function(short){
+		parseKeyValue(short).read(function(url){
+			log.info(url[0], url[1])
 		})
 	})
 
@@ -326,7 +336,7 @@ program
 
 program
 	.command('link [name]')
-	.description('link to a local package or set this one up for linking')
+	.description('link to a local package or register this one')
 	.option('-t, --target <dir>', 'name of the directory for installed packages', cfg.target)
 	.option('-n, --name <name>', 'set the name of this package when making it linkable')
 	.action(function(pkg, opts){
@@ -348,7 +358,7 @@ program
 
 program
 	.command('unlink [name]')
-	.description('unlink a local package or unregister this one from the index')
+	.description('unlink a local package or unregister this one')
 	.option('-t, --target <dir>', 'name of the directory for installed packages', cfg.target)
 	.option('-n, --name <name>', 'set the name of this package when making it linkable')
 	.action(function(pkg, opts){
