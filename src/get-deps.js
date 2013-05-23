@@ -81,7 +81,7 @@ function normalizeNpm(deps){
 
 function npmUrl(name, version){
 	// explicit version
-	if (/^\d+\.\d+\.\d+$/.test(version)) {
+	if (semver.valid(version)) {
 		return 'http://registry.npmjs.org/'+name+'/-/'+name+'-'+version+'.tgz'
 	}
 	// straight up url
