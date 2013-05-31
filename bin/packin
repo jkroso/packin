@@ -228,6 +228,7 @@ program
 	})
 	.action(function(kv, opts){
 		var deps = getAllDeps()
+		touch(opts.target)
 		if (kv) {
 			mkdirp.sync(opts.target)
 			if (kv in deps) {
@@ -253,6 +254,18 @@ program
 			}).throw()
 		}
 	})
+
+/**
+ * Touch `path` when present.
+ *
+ * @param {String} path
+ * @api private
+ */
+
+function touch(path) {
+  try { fs.utimesSync(path, new Date, new Date) }
+  catch (err) {}
+}
 
 /**
  * register a local package so it can be linked to
