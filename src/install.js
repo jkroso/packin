@@ -45,9 +45,32 @@ function install(dir, opts){
 		log.debug('%p depends on %j', dir, deps)
 
 		return each(deps, function(url, name){
+			var dep = addInstalled(opts.installed, url, name)
+			dep.parents.push(dir)
 			return linkPackage(url, join(folder, name), opts)
 		})
 	})
+}
+
+/**
+ * ensure `url` is registered as installed
+ * 
+ * @param {Object} installed
+ * @param {String} url
+ * @param {String} name
+ */
+
+function addInstalled(installed, url, name){
+	var dep = installed[url]
+	if (!dep) {
+		dep = installed[url] = {
+			parents: [],
+			url: url,
+			names: []
+		}
+	}
+	dep.names.push(name)
+	return dep
 }
 
 /**

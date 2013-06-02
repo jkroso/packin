@@ -3,7 +3,7 @@ var install = require('..')
   , fs = require('fs')
   , exists = fs.existsSync
   , equal = require('fs-equals/assert')
-  , should = require('chai').should()
+  , chai = require('./chai')
   , exec = require('child_process').exec
 
 var filterOpts = {
@@ -69,6 +69,16 @@ describe('install', function () {
 			return install(dir).then(function(){
 				fs.readlinkSync(dir+'/deps/equals').should.not.include('no/good.coffe')
 			})
+		}).node(done)
+	})
+
+	it('should return a list of installed deps', function (done) {
+		install(dir).then(function(deps){
+			expect(deps).to.be.an('object')
+				.and.include.keys(
+					'http://localhost:3000/equals/master',
+					'http://localhost:3000/type/master'
+				)
 		}).node(done)
 	})
 })

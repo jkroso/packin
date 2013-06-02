@@ -1,6 +1,6 @@
 {
   "name": "packin",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "a simple package manager",
   "dependencies": {
     "mkdirp": "~0.3.5",
