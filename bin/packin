@@ -128,7 +128,7 @@ function getAllDeps(json){
 function getDeps(file){
 	file || (file = cwd + '/deps.json')
 	if (!fs.existsSync(file)) return {}
-	return require(file)
+	return JSON.parse(fs.readFileSync(file, 'utf8'))
 }
 
 /**
