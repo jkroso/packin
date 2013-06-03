@@ -7,17 +7,19 @@
     "laissez-faire": "~0.12.3",
     "hyperquest": "~0.1.4",
     "when-all": "~0.3.0",
-    "promisify": "https://github.com/jkroso/promisify/archive/0.2.0.tar.gz",
-    "detect": "https://github.com/jkroso/detect/archive/0.1.0.tar.gz",
-    "foreach": "https://github.com/jkroso/forEach/archive/0.5.0.tar.gz",
+    "promisify": "http://github.com/jkroso/promisify/tarball/0.2.1",
+    "detect": "http://github.com/jkroso/detect/tarball/0.1.0",
+    "foreach": "http://github.com/jkroso/forEach/tarball/0.5.2",
     "untar": "~0.1.3",
-    "rmdir": "https://github.com/jkroso/node.rmdir/archive/master.tar.gz",
+    "rmdir": "http://github.com/jkroso/node.rmdir/tarball/master",
     "concat-stream": "~0.1.1",
     "semver": "~1.1.4",
     "JSONStream": "~0.6.4",
     "commander": "~1.1.1",
     "github-latest": "~0.1.1",
-    "writefile": "~0.1.1"
+    "writefile": "~0.1.1",
+    "dir-each": "~0.1.1",
+    "read-slice": "~0.1.0"
   },
   "bundledDependencies": [
     "rmdir"
@@ -25,11 +27,10 @@
   "devDependencies": {
     "express": "~3.2.0",
     "fs-equals": "~0.1.2",
-    "mocha": "~1.9.0",
-    "chai": "~1.5.0"
+    "mocha": "~1.10.0",
+    "chai": "~1.6.0"
   },
   "scripts": {
-    "test": "make test",
     "install": "bin/on-install.sh"
   },
   "repository": {

@@ -45,8 +45,6 @@ function install(dir, opts){
 		log.debug('%p depends on %j', dir, deps)
 
 		return each(deps, function(url, name){
-			var dep = addInstalled(opts.installed, url, name)
-			dep.parents.push(dir)
 			return linkPackage(url, join(folder, name), opts)
 		})
 	})
@@ -55,21 +53,19 @@ function install(dir, opts){
 /**
  * ensure `url` is registered as installed
  * 
- * @param {Object} installed
+ * @param {Object} log
  * @param {String} url
- * @param {String} name
  */
 
-function addInstalled(installed, url, name){
-	var dep = installed[url]
+function addInstalled(log, url){
+	var dep = log[url]
 	if (!dep) {
-		dep = installed[url] = {
+		dep = log[url] = {
 			parents: [],
-			url: url,
-			names: []
+			aliases: [],
+			url: url
 		}
 	}
-	dep.names.push(name)
 	return dep
 }
 
@@ -84,6 +80,9 @@ function addInstalled(installed, url, name){
 
 function linkPackage(url, from, opts){
 	var pkg = join(cache, url.replace(/^\w+:\/\//, ''))
+	var dep = addInstalled(opts.log, url)
+	dep.location = pkg
+	dep.aliases.push(from)
 	return ensureExists(url, pkg, opts).then(function(){
 		return link(from, pkg)
 	})
@@ -130,6 +129,7 @@ function ensureExists(url, dest, opts){
 	if (uri in seen) return seen[uri]
 	return seen[uri] = exists(dest)
 		.then(function(yes){
+			opts.log[url].isNew = !yes
 			if (!yes) return download(url, dest).then(function(){
 				log.info('installed', uri)
 			})
