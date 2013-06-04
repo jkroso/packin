@@ -5,6 +5,11 @@ var install = require('..')
   , equal = require('fs-equals/assert')
   , chai = require('./chai')
   , exec = require('child_process').exec
+  , log = require('../src/logger')
+
+// log.enable('warn')
+
+var cache = process.env.HOME + '/.packin/-'
 
 var filterOpts = {
 	name: function(name){
@@ -79,6 +84,28 @@ describe('install', function () {
 					'http://localhost:3000/equals/master',
 					'http://localhost:3000/type/master'
 				)
+		}).node(done)
+	})
+})
+
+describe('cleanup', function(){
+	var dir = __dirname+'/error'
+	afterEach(function (done) {
+		rmdir(__dirname+'/error/deps', done)
+	})
+	// localhost install directory
+	var lh = cache + '/localhost:3000'
+	it('should remove all new dependencies', function(done){
+		install(__dirname+'/simple').then(function(logA){
+			exists(lh+'/equals/master').should.be.true
+			exists(lh+'/type/master').should.be.true
+			return install(dir).then(null, function(e){
+				expect(e).to.be.an.instanceOf(Error)
+				exists(lh+'/equals/master').should.be.true
+				exists(lh+'/type/master').should.be.true
+				exists(lh+'/fail/master').should.be.false
+				exists(lh+'/failing/master').should.be.false
+			})
 		}).node(done)
 	})
 })

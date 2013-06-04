@@ -1,0 +1,5 @@
+{
+	"production": {
+		"fail": "http://localhost:3000/fail/master"
+	}
+}

@@ -11,7 +11,6 @@ var fs = require('fs')
   , symlink = promisify(fs.symlink)
   , readLink = promisify(fs.readlink)
   , rmfile = promisify(fs.unlink)
-  , rmdir = promisify(require('rmdir'))
   , getDeps = require('./get-deps')
   , log = require('./logger')
 
@@ -137,10 +136,6 @@ function ensureExists(url, dest, opts){
 		})
 		.then(function(){
 			return install(dest, opts)
-		})
-		// fail tidily
-		.then(null, function(e){
-			return rmdir(dest).always(function(){ throw e })
 		})
 }
 

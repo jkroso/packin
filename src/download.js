@@ -45,7 +45,7 @@ handlers.http = function(url, dir){
 handlers.git = function(url, dir){
 	return promise(function(fulfill, reject){
 		exec('git clone --depth 1 ' + url + ' ' + dir, function(e, so, se){
-			if (e) reject(e)
+			if (e) reject(new Error(e.message))
 			else if (se) reject(se)
 			else fulfill()
 		})
