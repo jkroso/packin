@@ -5,12 +5,10 @@ var fs = require('fs')
   , path = require('path')
   , join = path.join
   , all = require('when-all/naked')
-  , each = require('foreach/async/promise')
+  , each = require('foreach/async')
   , promisify = require('promisify')
+  , fs = require('promisify/fs')
   , mkdirp = promisify(require('mkdirp'))
-  , symlink = promisify(fs.symlink)
-  , readLink = promisify(fs.readlink)
-  , rmfile = promisify(fs.unlink)
   , getDeps = require('./get-deps')
   , log = require('./logger')
 
@@ -96,16 +94,16 @@ function linkPackage(url, from, opts){
  */
 
 function link(from, to){
-	return readLink(from).then(function(path){
+	return fs.readlink(from).then(function(path){
 		if (path != to) {
 			log.debug('correcting symlink %p', from)
-			return rmfile(from).then(function(){
-				return symlink(to, from)
+			return fs.unlink(from).then(function(){
+				return fs.symlink(to, from)
 			})
 		}
 	}, function(e){
 		switch (e.code) {
-			case 'ENOENT': return symlink(to, from)
+			case 'ENOENT': return fs.symlink(to, from)
 			case 'EINVAL':
 				log.info('warning', 'not linking %p since its a hard file', from)
 				break
@@ -126,7 +124,7 @@ function link(from, to){
 function ensureExists(url, dest, opts){
 	var uri = url.replace(/\w+:\/\//, '')
 	if (uri in seen) return seen[uri]
-	return seen[uri] = exists(dest)
+	return seen[uri] = fs.exists(dest)
 		.then(function(yes){
 			opts.log[url].isNew = !yes
 			if (!yes) return download(url, dest).then(function(){
@@ -140,19 +138,6 @@ function ensureExists(url, dest, opts){
 }
 
 var seen = Object.create(null)
-
-/**
- * check if the file/dir exists
- * 
- * @param {String} path
- * @return {Promise}
- */
-
-function exists(path){
-	return promise(function(fulfill){
-		fs.exists(path, fulfill)
-	})
-}
 
 function merge(a, b){
 	if (b) for (var k in b) if (!(k in a)) {

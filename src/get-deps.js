@@ -1,11 +1,9 @@
 
 var detect = require('detect/series')
-  , fs = require('fs')
-  , promisify = require('promisify')
+  , fs = require('promisify/fs')
   , parseJSON = require('JSONStream').parse
   , Promise = require('laissez-faire/full')
   , semver = require('semver')
-  , read = promisify(fs.readFile)
   , concat = require('concat-stream')
   , path = require('path')
   , all = require('when-all/object')
@@ -22,8 +20,8 @@ module.exports = deps
  */
 
 function deps(dir, opts){
-	return detect(opts.priority, function(file, cb){
-		fs.exists(path.join(dir, file), cb)
+	return detect(opts.priority, function(file){
+		return fs.exists(path.join(dir, file))
 	}).then(function(file){
 		log.warn('deps', '%p uses %s for meta data', dir, file)
 		return deps[file](dir, opts)
@@ -57,7 +55,7 @@ function normalizeComponent(deps){
 
 function componentUrl(name, version){
 	if (version == '*') version = 'master'
-	return 'https://github.com/'+name+'/tarball/'+version 
+	return 'http://github.com/'+name+'/tarball/'+version 
 	// for some reason this 404s with hyperquest but not curl(1)
 	// return 'https://api.github.com/repos/'+name+'/tarball/'+version 
 }
@@ -121,5 +119,5 @@ function match(version){
 }
 
 function readJSON(file){
-	return read(file, 'utf-8').then(JSON.parse)
+	return fs.readFile(file, 'utf-8').then(JSON.parse)
 }

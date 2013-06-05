@@ -1,20 +1,17 @@
 #!/usr/bin/env node
 
-var program = require('commander')
-  , install = require('../src/install')
-  , fs = require('fs')
+var Promise = require('laissez-faire/full')
+  , sliceFile = require('read-slice')
   , ghtag = require('github-latest')
   , writeFile = require('writefile')
-  , path = require('path')
-  , mkdirp = require('mkdirp')
-  , log = require('../src/logger')
-  , Promise = require('laissez-faire/full')
-  , each = require('foreach/async/promise')
+  , each = require('foreach/async')
   , eachfile = require('dir-each')
-  , sliceFile = require('read-slice')
-  , promisify = require('promisify')
-  , chmod = promisify(fs.chmod)
-  , realpath = promisify(fs.realpath)
+  , log = require('../src/logger')
+  , program = require('commander')
+  , fs = require('promisify/fs')
+  , mkdirp = require('mkdirp')
+  , install = require('..')
+  , path = require('path')
 
 // enable basic info
 
@@ -242,6 +239,9 @@ program
 			log: Object.create(null),
 			dev: options.dev
 		}
+
+		process.on('exit', cleanup)
+
 		if (kv) {
 			mkdirp.sync(options.target)
 			if (kv in deps) {
@@ -266,10 +266,18 @@ program
 		install(cwd, opts).read(complete)
 
 		function complete(){
+			process.removeListener('exit', cleanup)
 			if (!options.executables) return
 			return each(opts.log, function(dep){
 				return chmodExecutables(dep.location)
 			})
+		}
+
+		function cleanup(){
+			for (var dep in opts.log) {
+				dep = opts.log[dep]
+				if (dep.isNew); // TODO
+			}
 		}
 	})
 
@@ -282,13 +290,11 @@ program
 
 function chmodExecutables(dir){
 	return eachfile(dir, function(file){
-		return realpath(file).then(function(path){
-			return sliceFile(path, 0, 2).then(function(head){
-				if (head == '#!') {
-					log.info('executable', path)
-					return chmod(path, 0755)
-				}
-			})
+		return sliceFile(file, 0, 2).then(function(head){
+			if (head == '#!') {
+				log.info('executable', '%p', file)
+				return fs.chmod(file, '755')
+			}
 		})
 	})
 }

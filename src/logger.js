@@ -19,7 +19,7 @@ function space(type, msg, color){
 	var w = 12
 	var len = Math.max(0, w - type.length)
 	var pad = Array(len + 1).join(' ')
-	return '\033[' + color + 'm' + pad + type + '\033[m : \033[90m' + msg + '\033[m\n'
+	return '\033[' + color + 'm  ' + type + '\033[m : \033[90m' + msg + '\033[m\n'
 }
 
 /**

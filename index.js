@@ -1,8 +1,9 @@
 
 var install = require('./src/install')
   , each = require('foreach/series')
-  , fs = require('fs')
-  , rmdir = require('rmdir')
+  , promisify = require('promisify')
+  , fs = require('promisify/fs')
+  , rmdir = promisify(require('rmdir'))
   , log = require('./src/logger')
 
 /**
@@ -33,12 +34,14 @@ module.exports = function(dir, opts){
 function cleanup(options){
 	return function(e){
 		log.warn('failed', '%s', e.message)
-		return each(options.log, function(dep, _, done){
-			if (dep.isNew) fs.exists(dep.location, function(exists){
-				log.warn('removing', '%p [%s]', dep.location, exists)
-				if (exists) return rmdir(dep.location, done)
-			})
-			else done()
+		return each(options.log, function(dep){
+			if (dep.isNew) return fs.exists(dep.location)
+				.then(function(exists){
+					if (exists) {
+						log.warn('removing', '%p', dep.location)
+						return rmdir(dep.location)
+					}
+				})
 		}).then(function(){
 			throw e
 		})

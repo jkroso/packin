@@ -7,8 +7,4 @@ test:
 		--timeout 5s \
 		--slow 3s
 
-clean:
-	rm -rf test/npm/node_modules
-	rm -rf test/component/node_modules
-
-.PHONY: all test
+.PHONY: test

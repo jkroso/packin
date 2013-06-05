@@ -5,10 +5,8 @@
   "dependencies": {
     "laissez-faire": "jkroso/laissez-faire@0.12.2",
     "when": "https://github.com/jkroso/when/tarball/1.0.0",
-    "find": "git://github.com/component/find"
-  },
-  "scripts": {
-    "test": "make test"
+    "find": "git://github.com/component/find",
+    "readable-stream": "git://github.com/Raynos/readable-stream#read-stream"
   },
   "repository": {
     "type": "git",

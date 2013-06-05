@@ -195,6 +195,15 @@ describe('package.json', function () {
 describe('modern-npm', function () {
 	this.timeout(false)
 	var dir = __dirname+'/modern-npm'
+
+	beforeEach(function(done){
+		rmdir(cache+'/github.com/component/find', done)
+	})
+
+	beforeEach(function(done){
+		rmdir(cache+'/github.com/Raynos/readable-stream#read-stream', done)
+	})
+
 	afterEach(function (done) {
 		rmdir(dir+'/node_modules', done)
 	})
@@ -207,6 +216,7 @@ describe('modern-npm', function () {
 			exists(dir+'/node_modules/when').should.be.true
 			exists(dir+'/node_modules/laissez-faire').should.be.true
 			exists(dir+'/node_modules/find').should.be.true
+			exists(dir+'/node_modules/readable-stream').should.be.true
 			require(dir+'/async').should.be.a('function')
 		}).node(done)
 	})
