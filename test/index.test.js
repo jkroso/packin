@@ -29,6 +29,10 @@ function rmdir(dir, cb){
 	exec('rm -rf '+dir, cb)
 }
 
+afterEach(function(done){
+	rmdir(cache+'/localhost:3000', done)
+})
+
 describe('install', function () {
 	var dir = __dirname+'/simple'
 	afterEach(function (done) {
@@ -85,6 +89,16 @@ describe('install', function () {
 					'http://localhost:3000/type/master'
 				)
 		}).node(done)
+	})
+
+	it('should pick the meta data file with the most data', function(done){
+		var dir = __dirname + '/priority'
+		install(dir).read(function(log){
+			exists(dir+'/deps/mocha').should.be.true
+			exists(dir+'/deps/mocha/deps/equals').should.be.true
+			exists(dir+'/deps/mocha/deps/type').should.be.true
+			rmdir(dir+'/deps', done)
+		})
 	})
 })
 

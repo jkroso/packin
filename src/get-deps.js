@@ -1,13 +1,13 @@
 
-var detect = require('detect/series')
-  , fs = require('promisify/fs')
+var Promise = require('laissez-faire/full')
   , parseJSON = require('JSONStream').parse
-  , Promise = require('laissez-faire/full')
-  , semver = require('semver')
-  , concat = require('concat-stream')
-  , path = require('path')
-  , all = require('when-all/object')
   , download = require('./download').get
+  , concat = require('concat-stream')
+  , all = require('when-all/object')
+  , each = require('foreach/async')
+  , fs = require('promisify/fs')
+  , join = require('path').join
+  , semver = require('semver')
   , log = require('./logger')
 
 module.exports = deps
@@ -20,26 +20,71 @@ module.exports = deps
  */
 
 function deps(dir, opts){
-	return detect(opts.priority, function(file){
-		return fs.exists(path.join(dir, file))
-	}).then(function(file){
-		log.warn('deps', '%p uses %s for meta data', dir, file)
-		return deps[file](dir, opts)
-	}, function(e){
-		throw new Error('no meta file detected for '+dir)
+	var winner
+	var biggest = 0
+	var json
+	return each(opts.priority, function(file){
+		var path = join(dir, file)
+		return fs.exists(path).then(function(yes){
+			if (yes) return readJSON(path).then(function(object){
+				var deps = count[file](object)
+				if (deps > biggest) {
+					winner = file
+					biggest = deps
+					json = object
+				} else if (!winner) {
+					winner = file
+					json = object
+				}
+			})
+		})
+	}).then(function(){
+		if (!winner) throw new Error('no meta file detected for '+dir)
+		log.warn('deps', '%p uses %s for meta data', dir, winner)
+		return deps[winner](json, opts)
 	})
 }
 
-deps['deps.json'] = function(dir){
-	return readJSON(dir+'/deps.json')
+function keys(obj){
+	return (obj && Object.keys(obj).length) || 0
 }
 
-deps['component.json'] = function(dir, opts){
-	return readJSON(dir+'/component.json').then(function(json){
-		return all({
-			production: normalizeComponent(json.dependencies),
-			development: opts.dev && normalizeComponent(json.development)
-		})
+/**
+ * count dependency entries
+ * 
+ * @param {Object} json
+ * @return {Number}
+ * @api private
+ */
+
+var count = {
+	'deps.json': function(json){
+		return keys(json.production)
+	},
+	'component.json': function(json){
+		return keys(json.dependencies)
+	},
+	'package.json': function(json){
+		return keys(json.dependencies)
+	}
+}
+
+
+/**
+ * normalise json data
+ * 
+ * @param {Object} json
+ * @return {Object}
+ */
+
+deps['deps.json'] = function(json){
+	return json
+}
+
+deps['component.json'] = function(json, opts){
+	return all({
+		production: normalizeComponent(json.dependencies),
+		development: opts.dev && normalizeComponent(json.development)
 	})
 }
 
@@ -60,12 +105,10 @@ function componentUrl(name, version){
 	// return 'https://api.github.com/repos/'+name+'/tarball/'+version 
 }
 
-deps['package.json'] = function(dir, opts){
-	return readJSON(dir+'/package.json').then(function(json){
-		return all({
-			production: normalizeNpm(json.dependencies),
-			development: opts.dev && normalizeNpm(json.devDependencies)
-		})
+deps['package.json'] = function(json, opts){
+	return all({
+		production: normalizeNpm(json.dependencies),
+		development: opts.dev && normalizeNpm(json.devDependencies)
 	})
 }
 

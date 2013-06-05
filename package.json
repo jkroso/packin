@@ -17,7 +17,6 @@
     "read-slice": "~0.1.0",
     "github-latest": "http://github.com/jkroso/github-latest/tarball/fe495ff",
     "promisify": "http://github.com/jkroso/promisify/tarball/0.2.3",
-    "detect": "http://github.com/jkroso/detect/tarball/0.2.0",
     "foreach": "http://github.com/jkroso/forEach/tarball/0.6.0",
     "rmdir": "http://github.com/jkroso/node.rmdir/tarball/1.1.2"
   },
