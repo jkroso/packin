@@ -18,13 +18,13 @@ fi
 
 declare -a json=(
 	"{"
-	"  \"target\": \"node_modules\","
+	"  \"folder\": \"node_modules\","
 	"  \"meta\": ["
 	"    \"deps.json\","
 	"    \"component.json\","
 	"    \"package.json\""
 	"  ],"
-	"  \"deps\": false"
+	"  \"dev\": true"
 	"}"
 )
 

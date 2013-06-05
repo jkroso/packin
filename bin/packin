@@ -26,7 +26,7 @@ var cwd = process.cwd()
 var cfg = fs.existsSync(home+'/config.json')
 	? require(home+'/config.json')
 	: {}
-if (!('target' in cfg)) cfg.target = 'dev'
+if (!('folder' in cfg)) cfg.folder = 'dev'
 if (!('meta' in cfg)) cfg.meta = ['deps.json', 'component.json', 'package.json']
 if (!('dev' in cfg)) cfg.dev = true
 
@@ -40,7 +40,6 @@ program.on('verbose', function(){
 
 program
 	.command('add <key:url>')
-	.usage('ad')
 	.description('add a package to this packages dependencies')
 	.option('-d, --development', 'add as a development dependency')
 	.on('--help', function(){
@@ -155,7 +154,7 @@ function add(key, url, opts){
 program
 	.command('ls')
 	.description('display this packages dependencies')
-	.option('-t, --target <dir>', 'dependency directory', cfg.target)
+	.option('-f, --folder <dir>', 'dependency directory', cfg.folder)
 	.action(function(opts){
 		var pkg = cwd + '/deps.json'
 		var deps = require(pkg)
@@ -174,17 +173,17 @@ program
 
 		var locals = getLocals()
 
-		var links = fs.readdirSync(cwd+'/'+opts.target).filter(function(file){
+		var links = fs.readdirSync(cwd+'/'+opts.folder).filter(function(file){
 			if (deps.production && file in deps.production
 			|| (deps.development && file in deps.development)
 			|| !(file in locals)) return false
-			var stat = fs.lstatSync(path.join(cwd, opts.target, file))
+			var stat = fs.lstatSync(path.join(cwd, opts.folder, file))
 			return stat.isSymbolicLink()
 		})
 
 		if (links.length) { 
 			links.forEach(function(file){
-				var pth = path.join(cwd, opts.target, file)
+				var pth = path.join(cwd, opts.folder, file)
 				log.info(file, '%p -> %p', pth, fs.realpathSync(pth))
 			})
 			console.log()
@@ -195,7 +194,7 @@ program
 	.command('rm <key>')
 	.description('remove a package from this packages dependencies')
 	.option('-d, --development', 'add as a development dependency')
-	.option('-t, --target <dir>', 'dependency folder', cfg.target)
+	.option('-f, --folder <dir>', 'dependency folder', cfg.folder)
 	.action(function(name, opts){
 		var pkg = cwd + '/deps.json'
 		var json = require(pkg)
@@ -204,7 +203,7 @@ program
 			: json.production
 		if (deps && name in deps) {
 			delete deps[name]
-			var file = cwd + '/' + program.target + '/' + name
+			var file = cwd + '/' + program.folder + '/' + name
 			try { fs.unlinkSync(file) }
 			catch (e) {}
 			fs.writeFileSync(pkg, JSON.stringify(json, null, 2))
@@ -215,17 +214,17 @@ program
 program
 	.command('install [key:url]')
 	.description('install this packages dependencies')
-	.option('-p, --no-dev', 'ignore development dependencies', !cfg.dev)
-	.option('-r, --no-retrace', 'don\'t step into existing dependencies')
+	.option('-D, --no-dev', 'ignore development dependencies', !cfg.dev)
+	.option('-R, --no-retrace', 'don\'t step into existing dependencies')
 	.option('-d, --development', 'install as a development dependency')
-	.option('-t, --target <dir>', 'name of the directory for installed packages', cfg.target)
-	.option('-m, --meta <files...>', 'list of meta files to read', list, cfg.meta)
+	.option('-f, --folder <dir>', 'name of the directory for installed packages', cfg.folder)
+	.option('-m, --meta <files>', 'list of meta files to read', list, cfg.meta)
 	.option('-e, --executables', 'run chmod 755 on all executables')
 	.on('--help', function () {
 		print('  Examples:')
 		print('')
 		print('    # to emulate npm install')
-		print('    $ packin install -m package.json')
+		print('    $ packin install -em package.json')
 		print('')
 		print('    # to use components and npm packages')
 		print('    $ packin install -m component.json,package.json')
@@ -233,9 +232,9 @@ program
 	})
 	.action(function(kv, options){
 		var deps = getAllDeps()
-		touch(options.target)
+		touch(options.folder)
 		var opts = {
-			folder: options.target,
+			folder: options.folder,
 			priority: options.meta,
 			log: Object.create(null),
 			dev: options.dev,
@@ -245,11 +244,11 @@ program
 		process.on('exit', cleanup)
 
 		if (kv) {
-			mkdirp.sync(options.target)
+			mkdirp.sync(options.folder)
 			if (kv in deps) {
 				return install.one(
 					deps[kv],
-					path.join(cwd, options.target, kv),
+					path.join(cwd, options.folder, kv),
 					opts
 				).read(complete)
 			}
@@ -259,7 +258,7 @@ program
 				add(name, url, options)
 				install.one(
 					url,
-					path.join(cwd, options.target, name),
+					path.join(cwd, options.folder, name),
 					opts
 				).read(complete)
 			})
@@ -396,7 +395,7 @@ program
 program
 	.command('link [name]')
 	.description('link to a local package or register this one')
-	.option('-t, --target <dir>', 'name of the directory for installed packages', cfg.target)
+	.option('-f, --folder <dir>', 'name of the directory for installed packages', cfg.folder)
 	.option('-n, --name <name>', 'set the name of this package when making it linkable')
 	.on('--help', function(){
 		print('  Examples:')
@@ -417,7 +416,7 @@ program
 			log.info('error', '%s is not registered', pkg)
 			return
 		}
-		var deps = cwd + '/' + opts.target
+		var deps = cwd + '/' + opts.folder
 		mkdirp.sync(deps)
 		var sym = deps+'/'+pkg
 		try { fs.unlinkSync(sym) } catch (e) {}
@@ -428,13 +427,13 @@ program
 program
 	.command('unlink [name]')
 	.description('unlink a local package or unregister this one')
-	.option('-t, --target <dir>', 'name of the directory for installed packages', cfg.target)
+	.option('-f, --folder <dir>', 'name of the directory for installed packages', cfg.folder)
 	.option('-n, --name <name>', 'set the name of this package when making it linkable')
 	.action(function(pkg, opts){
 		// deregister this package
 		if (opts.name || !pkg) return unregister(cwd, opts.name)
 		
-		fs.unlink(cwd + '/' + opts.target + '/' + pkg, function(){
+		fs.unlink(cwd + '/' + opts.folder + '/' + pkg, function(){
 			// ignore errors
 		})
 	})
