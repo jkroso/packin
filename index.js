@@ -77,4 +77,5 @@ function addDefaults(opts){
 	opts.folder || (opts.folder = 'deps')
 	opts.priority || (opts.priority = defaultPriority)
 	opts.log || (opts.log = Object.create(null))
+	opts.retrace = opts.retrace !== false
 }

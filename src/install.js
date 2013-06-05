@@ -126,14 +126,14 @@ function ensureExists(url, dest, opts){
 	if (uri in seen) return seen[uri]
 	return seen[uri] = fs.exists(dest)
 		.then(function(yes){
-			opts.log[url].isNew = !yes
-			if (!yes) return download(url, dest).then(function(){
-				log.info('installed', uri)
-			})
+			if (opts.log[url].isNew = !yes) {
+				return download(url, dest).then(function(){
+					log.info('installed', uri)
+					return install(dest, opts)
+				})
+			}
 			log.info('exists', uri)
-		})
-		.then(function(){
-			return install(dest, opts)
+			if (opts.retrace) return install(dest, opts)
 		})
 }
 

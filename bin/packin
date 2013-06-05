@@ -216,6 +216,7 @@ program
 	.command('install [key:url]')
 	.description('install this packages dependencies')
 	.option('-p, --no-dev', 'ignore development dependencies', !cfg.dev)
+	.option('-r, --no-retrace', 'don\'t step into existing dependencies')
 	.option('-d, --development', 'install as a development dependency')
 	.option('-t, --target <dir>', 'name of the directory for installed packages', cfg.target)
 	.option('-m, --meta <files...>', 'list of meta files to read', list, cfg.meta)
@@ -237,7 +238,8 @@ program
 			folder: options.target,
 			priority: options.meta,
 			log: Object.create(null),
-			dev: options.dev
+			dev: options.dev,
+			retrace: options.retrace
 		}
 
 		process.on('exit', cleanup)
