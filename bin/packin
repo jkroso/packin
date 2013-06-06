@@ -9,7 +9,6 @@ var Promise = require('laissez-faire/full')
   , log = require('../src/logger')
   , program = require('commander')
   , fs = require('promisify/fs')
-  , mkdirp = require('mkdirp')
   , install = require('..')
   , path = require('path')
 
@@ -244,7 +243,7 @@ program
 		process.on('exit', cleanup)
 
 		if (kv) {
-			mkdirp.sync(options.folder)
+			mkdir(options.folder)
 			if (kv in deps) {
 				return install.one(
 					deps[kv],
@@ -363,6 +362,14 @@ function getLocals(){
 	return fs.existsSync(links)
 		? require(links)
 		: {}
+}
+
+function mkdir(folder){
+	try {
+		fs.mkdirSync(folder)
+	} catch (e) {
+		if (e.code != 'EEXIST') throw e
+	}
 }
 
 /**

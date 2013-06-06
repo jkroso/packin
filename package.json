@@ -3,7 +3,6 @@
   "version": "0.1.4",
   "description": "a simple package manager",
   "dependencies": {
-    "mkdirp": "~0.3.5",
     "laissez-faire": "~0.12.4",
     "hyperquest": "~0.1.4",
     "when-all": "~0.3.0",
@@ -24,7 +23,7 @@
     "express": "~3.2.0",
     "fs-equals": "~0.1.2",
     "mocha": "~1.10.0",
-    "chai": "~1.6.0"
+    "chai": "~1.6.1"
   },
   "scripts": {
     "install": "bin/on-install.sh"

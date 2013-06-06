@@ -1,16 +1,13 @@
 
-var fs = require('fs')
-  , promise = require('laissez-faire')
+var promise = require('laissez-faire')
   , download = require('./download')
-  , path = require('path')
-  , join = path.join
   , all = require('when-all/naked')
   , each = require('foreach/async')
-  , promisify = require('promisify')
-  , fs = require('promisify/fs')
-  , mkdirp = promisify(require('mkdirp'))
   , getDeps = require('./get-deps')
+  , fs = require('promisify/fs')
   , log = require('./logger')
+  , path = require('path')
+  , join = path.join
 
 var cache = process.env.HOME + '/.packin/-'
 
@@ -27,16 +24,14 @@ install.one = linkPackage
 
 function install(dir, opts){
 	var folder = dir + '/' + opts.folder
-	return all(
-		getDeps(dir, opts),
-		mkdirp(folder)
-	).then(function(all){
-		var deps = all[0].production || {}
+	return all(getDeps(dir, opts), mkdir(folder)).then(function(arr){
+		var json = arr[0]
+		var deps = json.production || {}
 		
 		// disable dev after the first iteration
 		if (opts.dev) {
 			opts.dev = false
-			deps = merge(deps, all[0].development)
+			deps = merge(deps, json.development)
 		}
 
 		log.debug('%p depends on %j', dir, deps)
@@ -135,6 +130,12 @@ function ensureExists(url, dest, opts){
 			log.info('exists', uri)
 			if (opts.retrace) return install(dest, opts)
 		})
+}
+
+function mkdir(folder){
+	return fs.mkdir(folder).then(null, function(e){
+		if (e.code != 'EEXIST') throw e
+	})
 }
 
 var seen = Object.create(null)

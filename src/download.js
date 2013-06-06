@@ -1,10 +1,10 @@
 
-var promise = require('laissez-faire')
+var exec = require('child_process').exec
+  , promise = require('laissez-faire')
   , request = require('hyperquest')
+  , log = require('./logger')
   , untar = require('untar')
   , zlib = require('zlib')
-  , exec = require('child_process').exec
-  , log = require('./logger')
 
 module.exports = download
 download.get = response
