@@ -158,14 +158,21 @@ program
 		var pkg = cwd + '/deps.json'
 		var deps = require(pkg)
 		console.log()
-		show(deps.production)
-		show(deps.development)
-		function show(obj){
+		show('production')
+		show('development')
+		
+		function show(key){
+			var obj = deps[key]
 			if (!obj) return
 			var keys = Object.keys(obj)
 			if (!keys.length) return
+			console.log(blue('  %s'), key)
 			keys.forEach(function(key){
-				log.info(key, obj[key])
+				var url = obj[key]
+				if (/github\.com\/([^\/]+)\/([^\/]+)\/tarball\/(.+)/.test(url)) {
+					url = RegExp.$1 + '/' + RegExp.$2 + '@' + RegExp.$3
+				}
+				console.log('\033[36m    %s\033[m %s', key, url)
 			})
 			console.log()
 		}
@@ -181,13 +188,18 @@ program
 		})
 
 		if (links.length) { 
+			console.log(blue('  locals') + ':')
 			links.forEach(function(file){
 				var pth = path.join(cwd, opts.folder, file)
-				log.info(file, '%p -> %p', pth, fs.realpathSync(pth))
+				log.info('  '+file, '%p -> %p', pth, fs.realpathSync(pth))
 			})
 			console.log()
 		}
 	})
+
+function blue(text){
+	return '\033[36m' + text + '\033[m'
+}
 
 program
 	.command('rm <key>')
