@@ -244,6 +244,7 @@ program
 
 		if (kv) {
 			mkdir(options.folder)
+			opts.dev = false
 			if (kv in deps) {
 				return install.one(
 					deps[kv],

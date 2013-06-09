@@ -1,6 +1,5 @@
 
-var promise = require('laissez-faire')
-  , download = require('./download')
+var download = require('./download')
   , all = require('when-all/naked')
   , each = require('foreach/async')
   , getDeps = require('./get-deps')
@@ -31,6 +30,7 @@ function install(dir, opts){
 		// disable dev after the first iteration
 		if (opts.dev) {
 			opts.dev = false
+			log.debug('including development dependencies for %p', dir)
 			deps = merge(deps, json.development)
 		}
 

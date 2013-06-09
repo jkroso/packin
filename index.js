@@ -78,4 +78,5 @@ function addDefaults(opts){
 	opts.priority || (opts.priority = defaultPriority)
 	opts.log || (opts.log = Object.create(null))
 	opts.retrace = opts.retrace !== false
+	opts.dev = opts.dev === true
 }
