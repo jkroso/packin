@@ -5,6 +5,7 @@ exports.error =
 exports.warn = 
 exports.info =
 exports.debug = function(){}
+exports.format = format
 
 /**
  * format `msg` with a `type` header
@@ -30,7 +31,7 @@ function space(type, msg, color){
  */
 
 function out(type, msg){
-	msg = format(msg, arguments, 2)
+	msg = format.apply(this, [].slice.call(arguments, 1))
 	process.stdout.write(space(type, msg))
 }
 
@@ -42,7 +43,7 @@ function out(type, msg){
  */
 
 function error(type, msg){
-	msg = format(msg, arguments, 2)
+	msg = format.apply(this, [].slice.call(arguments, 1))
 	process.stderr.write(space(type, msg))
 }
 
@@ -83,7 +84,9 @@ exports.enable = function(level){
  * @return {String}
  */
 
-function format(str, args, i){
+function format(str){
+	var args = arguments
+	var i = 1
 	return str.replace(/%(s|d|j|p|u)/g, function(_, t){
 		return tokens[t](args[i], args, i++)
 	})

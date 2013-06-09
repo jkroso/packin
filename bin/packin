@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 var Promise = require('laissez-faire/full')
+  , getDeps = require('../src/get-deps')
   , sliceFile = require('read-slice')
   , ghtag = require('github-latest')
   , writeFile = require('writefile')
@@ -11,6 +12,7 @@ var Promise = require('laissez-faire/full')
   , fs = require('promisify/fs')
   , install = require('..')
   , path = require('path')
+  , format = log.format
 
 // enable basic info
 
@@ -155,46 +157,49 @@ program
 	.description('display this packages dependencies')
 	.option('-f, --folder <dir>', 'dependency directory', cfg.folder)
 	.action(function(opts){
-		var pkg = cwd + '/deps.json'
-		var deps = require(pkg)
-		console.log()
-		show('production')
-		show('development')
-		
-		function show(key){
-			var obj = deps[key]
-			if (!obj) return
-			var keys = Object.keys(obj)
-			if (!keys.length) return
-			console.log(blue('  %s'), key)
-			keys.forEach(function(key){
-				var url = obj[key]
-				if (/github\.com\/([^\/]+)\/([^\/]+)\/tarball\/(.+)/.test(url)) {
-					url = RegExp.$1 + '/' + RegExp.$2 + '@' + RegExp.$3
-				}
-				console.log('\033[36m    %s\033[m %s', key, url)
-			})
+		getDeps(cwd, {
+			priority: cfg.meta,
+			dev: true
+		}).then(function(deps){
 			console.log()
-		}
+			show('production')
+			show('development')
+			
+			function show(key){
+				var obj = deps[key]
+				if (!obj) return
+				var keys = Object.keys(obj)
+				if (!keys.length) return
+				print(format('  %s', blue(key)))
+				keys.forEach(function(key){
+					var url = obj[key]
+					if (/github\.com\/([^\/]+)\/([^\/]+)\/tarball\/(.+)/.test(url)) {
+						url = RegExp.$1 + '/' + RegExp.$2 + '@' + RegExp.$3
+					}
+					print(format('    %s %s', blue(key), url))
+				})
+				print('')
+			}
 
-		var locals = getLocals()
+			var locals = getLocals()
 
-		var links = fs.readdirSync(cwd+'/'+opts.folder).filter(function(file){
-			if (deps.production && file in deps.production
-			|| (deps.development && file in deps.development)
-			|| !(file in locals)) return false
-			var stat = fs.lstatSync(path.join(cwd, opts.folder, file))
-			return stat.isSymbolicLink()
+			var links = fs.readdirSync(cwd+'/'+opts.folder).filter(function(file){
+				if (deps.production && file in deps.production
+				|| (deps.development && file in deps.development)
+				|| !(file in locals)) return false
+				var stat = fs.lstatSync(path.join(cwd, opts.folder, file))
+				return stat.isSymbolicLink()
+			})
+
+			if (links.length) { 
+				print(blue('  links'))
+				links.forEach(function(file){
+					var pth = path.join(cwd, opts.folder, file)
+					print(format('    %s %p -> %p', blue(file), pth, fs.realpathSync(pth)))
+				})
+				print('')
+			}
 		})
-
-		if (links.length) { 
-			console.log(blue('  locals') + ':')
-			links.forEach(function(file){
-				var pth = path.join(cwd, opts.folder, file)
-				log.info('  '+file, '%p -> %p', pth, fs.realpathSync(pth))
-			})
-			console.log()
-		}
 	})
 
 function blue(text){
@@ -437,7 +442,7 @@ program
 			return
 		}
 		var deps = cwd + '/' + opts.folder
-		mkdirp.sync(deps)
+		mkdir(deps)
 		var sym = deps+'/'+pkg
 		try { fs.unlinkSync(sym) } catch (e) {}
 		fs.symlinkSync(locals[pkg], sym)
