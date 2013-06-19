@@ -107,7 +107,7 @@ function parseKeyValue(kv){
  */
 
 function getAllDeps(json){
-	json = getDeps(json)
+	json = getJSON(json)
 	var deps = json.production || {}
 	if (json.development) for (var k in json.development) {
 		deps[k] = json.development[k]
@@ -122,7 +122,7 @@ function getAllDeps(json){
  * @return {Object}
  */
 
-function getDeps(file){
+function getJSON(file){
 	file || (file = cwd + '/deps.json')
 	if (!fs.existsSync(file)) return {}
 	return JSON.parse(fs.readFileSync(file, 'utf8'))
@@ -138,7 +138,7 @@ function getDeps(file){
 
 function add(key, url, opts){
 	var file = cwd + '/deps.json'
-	var json = getDeps(file)
+	var json = getJSON(file)
 
 	// --development
 	if (opts.development) {
