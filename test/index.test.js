@@ -1,11 +1,11 @@
 
-var install = require('..')
+var exec = require('child_process').exec
+  , equal = require('fs-equals/assert')
+  , log = require('../src/logger')
+  , chai = require('./chai')
+  , install = require('..')
   , fs = require('fs')
   , exists = fs.existsSync
-  , equal = require('fs-equals/assert')
-  , chai = require('./chai')
-  , exec = require('child_process').exec
-  , log = require('../src/logger')
 
 // log.enable('warn')
 
@@ -195,7 +195,7 @@ describe('package.json', function () {
 	it('should optionally install devDependencies', function (done) {
 		install({
 			target: dir,
-			priority: ['env.json', 'package.json', 'component.json'],
+			files: ['env.json', 'package.json', 'component.json'],
 			folder: 'node_modules',
 			dev: true
 		}).then(function(){
@@ -224,7 +224,7 @@ describe('modern-npm', function () {
 
 	it('should love it', function (done) {
 		install(dir, {
-			priority: ['package.json'],
+			files: ['package.json'],
 			folder: 'node_modules'
 		}).then(function(){
 			exists(dir+'/node_modules/when').should.be.true
@@ -245,7 +245,7 @@ describe('invalid npm deps', function () {
 
 	it('should error', function (done) {
 		install(dir, {
-			priority: ['package.json'],
+			files: ['package.json'],
 			folder: 'node_modules'
 		}).otherwise(function(e){
 			e.should.be.an.instanceOf(Error)

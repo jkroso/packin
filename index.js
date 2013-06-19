@@ -1,9 +1,9 @@
 
 var install = require('./src/install')
   , each = require('foreach/series')
-  , promisify = require('promisify')
-  , fs = require('promisify/fs')
-  , rmdir = promisify(require('rmdir'))
+  , resultify = require('resultify')
+  , fs = require('resultify/fs')
+  , rmdir = resultify(require('rmdir'))
   , log = require('./src/logger')
 
 /**
@@ -64,7 +64,7 @@ module.exports.one = function(url, dir, opts){
 	}, cleanup(opts))
 }
 
-var defaultPriority = ['deps.json', 'component.json', 'package.json']
+var defaultFiles = ['deps.json', 'component.json', 'package.json']
 
 /**
  * hydrate `opts` with default values
@@ -75,7 +75,7 @@ var defaultPriority = ['deps.json', 'component.json', 'package.json']
 
 function addDefaults(opts){
 	opts.folder || (opts.folder = 'deps')
-	opts.priority || (opts.priority = defaultPriority)
+	opts.files || (opts.files = defaultFiles)
 	opts.log || (opts.log = Object.create(null))
 	opts.retrace = opts.retrace !== false
 	opts.dev = opts.dev === true
