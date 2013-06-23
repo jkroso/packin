@@ -1,32 +1,33 @@
 {
   "name": "packin",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "a simple package manager",
   "dependencies": {
-    "laissez-faire": "~0.12.4",
-    "hyperquest": "~0.1.4",
-    "when-all": "~0.3.0",
-    "untar": "~0.1.5",
-    "concat-stream": "~0.1.1",
-    "semver": "~1.1.4",
-    "JSONStream": "~0.6.4",
-    "commander": "~1.1.1",
-    "writefile": "~0.1.1",
-    "dir-each": "~0.2.0",
-    "read-slice": "~0.1.0",
     "github-latest": "http://github.com/jkroso/github-latest/tarball/fe495ff",
-    "promisify": "http://github.com/jkroso/promisify/tarball/0.2.3",
-    "foreach": "http://github.com/jkroso/forEach/tarball/0.6.0",
-    "rmdir": "http://github.com/jkroso/node.rmdir/tarball/1.1.2"
+    "rmdir": "http://github.com/jkroso/node.rmdir/tarball/1.2.0",
+    "foreach": "http://github.com/jkroso/forEach/tarball/0.8.4",
+    "when": "http://github.com/jkroso/when/tarball/3.2.1",
+    "concat-stream": "0.1.1",
+    "hyperquest": "0.1.4",
+    "read-slice": "0.2.2",
+    "JSONStream": "0.6.4",
+    "writefile": "0.2.1",
+    "commander": "1.2.0",
+    "resultify": "0.2.3",
+    "dir-each": "0.3.1",
+    "when-all": "0.4.3",
+    "semver": "2.0.7",
+    "result": "0.3.0",
+    "untar": "0.2.1"
   },
   "devDependencies": {
-    "express": "~3.2.0",
-    "fs-equals": "~0.1.2",
-    "mocha": "~1.10.0",
-    "chai": "~1.6.1"
+    "fs-equals": "0.2.3",
+    "express": "3.2.6",
+    "mocha": "1.11.0",
+    "chai": "1.7.0"
   },
   "scripts": {
-    "install": "bin/on-install.sh"
+    "install": "bin/on-install.sh && npm dedupe"
   },
   "repository": {
     "type": "git",

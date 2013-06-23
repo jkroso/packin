@@ -1,13 +1,13 @@
 
-var Promise = require('laissez-faire/full')
-  , parseJSON = require('JSONStream').parse
+var parseJSON = require('JSONStream').parse
   , download = require('./download').get
   , concat = require('concat-stream')
-  , all = require('when-all/object')
-  , each = require('foreach/series')
-  , fs = require('promisify/fs')
+  , each = require('foreach/async')
+  , fs = require('resultify/fs')
   , join = require('path').join
+  , Result = require('result')
   , semver = require('semver')
+  , all = require('when-all')
   , log = require('./logger')
 
 module.exports = deps
@@ -16,14 +16,14 @@ module.exports = deps
  * get a normalized deps.json
  *
  * @param {String} path to the package
- * @return {Promise} deps
+ * @return {Result} deps
  */
 
 function deps(dir, opts){
 	var winner
 	var biggest = 0
 	var json
-	return each(opts.priority, function(file){
+	return each(opts.files, function(file){
 		var path = join(dir, file)
 		return fs.exists(path).then(function(yes){
 			if (yes) return readJSON(path).then(function(object){
@@ -135,23 +135,20 @@ function npmUrl(name, version){
 	}
 	// semver magic
 	return download('http://registry.npmjs.org/'+name).then(function(response){
-		var p = new Promise
+		var result = new Result
 		response
 			.pipe(parseJSON(['versions', match(version)]))
-			.pipe(concat(done))
-
-		function done(e, versions){
-			if (e) return p.reject(e)
-			if (!versions || !versions.length) {
-				return p.reject(new Error(name+'@'+version+' not in npm'))
-			}
-			var latest = versions.sort(function(a,b){
-				return semver.rcompare(a.version, b.version)
-			})[0]
-			p.fulfill(latest.dist.tarball)
-		}
-
-		return p
+			.pipe(concat(function(e, versions){
+				if (e) return result.error(e)
+				if (!versions || !versions.length) {
+					return result.error(new Error(name+'@'+version+' not in npm'))
+				}
+				var latest = versions.sort(function(a,b){
+					return semver.rcompare(a.version, b.version)
+				})[0]
+				result.write(latest.dist.tarball)
+			}))
+		return result
 	})
 }
 

@@ -17,7 +17,7 @@ var filterOpts = {
 	}
 }
 
-afterEach(function () {
+afterEach(function(){
 	// install uses an internal cache so it needs to be reloaded
 	// between tests since we are deleting files between runs
 	delete require.cache[require.resolve('..')]
@@ -33,13 +33,13 @@ afterEach(function(done){
 	rmdir(cache+'/localhost:3000', done)
 })
 
-describe('install', function () {
+describe('install', function(){
 	var dir = __dirname+'/simple'
-	afterEach(function (done) {
+	afterEach(function(done){
 		rmdir(__dirname+'/simple/deps', done)
 	})
 
-	it('should install dependencies', function (done) {
+	it('should install dependencies', function(done){
 		install(dir).then(function(){
 			return equal(
 				__dirname+'/simple/deps/equals',
@@ -49,7 +49,7 @@ describe('install', function () {
 		}).node(done)
 	})
 
-	it('should install subdependencies', function (done) {
+	it('should install subdependencies', function(done){
 		install(__dirname+'/simple').then(function(){
 			return equal(
 				__dirname+'/simple/deps/equals/deps/type',
@@ -59,19 +59,19 @@ describe('install', function () {
 		}).node(done)
 	})
 
-	it('should ignore development dependencies', function (done) {
+	it('should ignore development dependencies', function(done){
 		install(__dirname+'/simple').then(function(){
 			exists(__dirname+'/simple/deps/type').should.be.false
 		}).node(done)
 	})
 
-	it('unless told to include them', function (done) {
+	it('unless told to include them', function(done){
 		install(__dirname+'/simple', {dev: true}).then(function(){
 			exists(__dirname+'/simple/deps/type').should.be.true
 		}).node(done)
 	})
 
-	it('should fix misdirected symlinks', function (done) {
+	it('should fix misdirected symlinks', function(done){
 		install(dir).then(function(){
 			fs.unlinkSync(dir+'/deps/equals')
 			fs.symlinkSync('/some/path/that/probably/no/good.coffee', dir+'/deps/equals')
@@ -81,7 +81,7 @@ describe('install', function () {
 		}).node(done)
 	})
 
-	it('should return a list of installed deps', function (done) {
+	it('should return a list of installed deps', function(done){
 		install(dir).then(function(deps){
 			expect(deps).to.be.an('object')
 				.and.include.keys(
@@ -104,7 +104,7 @@ describe('install', function () {
 
 describe('cleanup', function(){
 	var dir = __dirname+'/error'
-	afterEach(function (done) {
+	afterEach(function(done){
 		rmdir(__dirname+'/error/deps', done)
 	})
 	// localhost install directory
@@ -124,12 +124,12 @@ describe('cleanup', function(){
 	})
 })
 
-describe('custom install folders', function () {
-	afterEach(function (done) {
+describe('custom install folders', function(){
+	afterEach(function(done){
 		rmdir(__dirname+'/simple/node_modules', done)
 	})
 
-	it('should work', function (done) {
+	it('should work', function(done){
 		install(__dirname+'/simple', {folder: 'node_modules'}).then(function(){
 			return equal(
 				__dirname+'/simple/node_modules/equals',
@@ -145,7 +145,7 @@ describe('custom install folders', function () {
 		}).node(done)
 	})
 	
-	it('should be able to install packages for node', function (done) {
+	it('should be able to install packages for node', function(done){
 		install(__dirname+'/simple', {folder: 'node_modules'}).then(function(){
 			var simple = require('./simple')
 			simple.should.be.a('function')
@@ -153,14 +153,14 @@ describe('custom install folders', function () {
 	})
 })
 
-describe('component.json', function () {
+describe('component.json', function(){
 	this.timeout(false)
 	var dir = __dirname+'/component'
-	afterEach(function (done) {
+	afterEach(function(done){
 		rmdir(__dirname+'/component/node_modules', done)
 	})
 
-	it('should install subdependencies', function (done) {
+	it('should install subdependencies', function(done){
 		install(dir, {folder: 'node_modules'}).then(function(){
 			exists(dir+'/node_modules/toposort').should.be.true
 			require(dir).should.be.a('function')
@@ -173,14 +173,14 @@ describe('component.json', function () {
 	})
 })
 
-describe('package.json', function () {
+describe('package.json', function(){
 	this.timeout(false)
 	var dir = __dirname+'/npm'
-	afterEach(function (done) {
-		rmdir(__dirname+'/npm/node_modules', done)
+	afterEach(function(done){
+		rmdir(dir + '/node_modules', done)
 	})
 
-	it('should install subdependencies', function (done) {
+	it('should install subdependencies', function(done){
 		install(dir, {folder: 'node_modules'}).then(function(){
 			exists(dir+'/node_modules/sliced').should.be.true
 			require(dir).should.be.a('function')
@@ -192,10 +192,9 @@ describe('package.json', function () {
 		})
 	})
 
-	it('should optionally install devDependencies', function (done) {
-		install({
-			target: dir,
-			files: ['env.json', 'package.json', 'component.json'],
+	it('should optionally install devDependencies', function(done){
+		install(dir, {
+			files: ['package.json'],
 			folder: 'node_modules',
 			dev: true
 		}).then(function(){
@@ -206,7 +205,7 @@ describe('package.json', function () {
 	})
 })
 
-describe('modern-npm', function () {
+describe('modern-npm', function(){
 	this.timeout(false)
 	var dir = __dirname+'/modern-npm'
 
@@ -218,11 +217,11 @@ describe('modern-npm', function () {
 		rmdir(cache+'/github.com/Raynos/readable-stream#read-stream', done)
 	})
 
-	afterEach(function (done) {
+	afterEach(function(done){
 		rmdir(dir+'/node_modules', done)
 	})
 
-	it('should love it', function (done) {
+	it('should love it', function(done){
 		install(dir, {
 			files: ['package.json'],
 			folder: 'node_modules'
@@ -236,18 +235,18 @@ describe('modern-npm', function () {
 	})
 })
 
-describe('invalid npm deps', function () {
+describe('invalid npm deps', function(){
 	this.timeout(false)
 	var dir = __dirname+'/bad-npm/invalid-version'
-	afterEach(function (done) {
+	afterEach(function(done){
 		rmdir(dir+'/node_modules', done)
 	})
 
-	it('should error', function (done) {
+	it('should error', function(done){
 		install(dir, {
 			files: ['package.json'],
 			folder: 'node_modules'
-		}).otherwise(function(e){
+		}).then(null, function(e){
 			e.should.be.an.instanceOf(Error)
 			e.message.should.include('not in npm')
 			done()
@@ -255,14 +254,14 @@ describe('invalid npm deps', function () {
 	})
 })
 
-describe('install.one(url, dest, opts)', function () {
+describe('install.one(url, dest, opts)', function(){
 	var pkg = 'http://localhost:3000/equals/master'
 	var dir = __dirname + '/equals'
-	afterEach(function (done) {
+	afterEach(function(done){
 		exec('rm '+dir, done)
 	})
 
-	it('should install `url` to `dest`', function (done) {
+	it('should install `url` to `dest`', function(done){
 		install.one(pkg, dir).then(function(){
 			return equal(
 				__dirname+'/equals',

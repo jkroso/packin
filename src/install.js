@@ -1,9 +1,9 @@
 
 var download = require('./download')
-  , all = require('when-all/naked')
-  , each = require('foreach/async')
+  , each = require('foreach/series')
   , getDeps = require('./get-deps')
-  , fs = require('promisify/fs')
+  , apply = require('when/apply')
+  , fs = require('resultify/fs')
   , log = require('./logger')
   , path = require('path')
   , join = path.join
@@ -23,8 +23,7 @@ install.one = linkPackage
 
 function install(dir, opts){
 	var folder = dir + '/' + opts.folder
-	return all(getDeps(dir, opts), mkdir(folder)).then(function(arr){
-		var json = arr[0]
+	return apply(getDeps(dir, opts), mkdir(folder), function(json){
 		var deps = json.production || {}
 		
 		// disable dev after the first iteration

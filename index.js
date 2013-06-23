@@ -2,9 +2,9 @@
 var install = require('./src/install')
   , each = require('foreach/series')
   , resultify = require('resultify')
-  , fs = require('resultify/fs')
-  , rmdir = resultify(require('rmdir'))
   , log = require('./src/logger')
+  , fs = require('resultify/fs')
+  , rmdir = require('rmdir')
 
 /**
  * install all dependecies of `dir`
@@ -35,13 +35,14 @@ function cleanup(options){
 	return function(e){
 		log.warn('failed', '%s', e.message)
 		return each(options.log, function(dep){
-			if (dep.isNew) return fs.exists(dep.location)
-				.then(function(exists){
+			if (dep.isNew) {
+				return fs.exists(dep.location).then(function(exists){
 					if (exists) {
 						log.warn('removing', '%p', dep.location)
 						return rmdir(dep.location)
 					}
 				})
+			}
 		}).then(function(){
 			throw e
 		})

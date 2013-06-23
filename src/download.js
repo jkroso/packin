@@ -1,7 +1,7 @@
 
 var exec = require('child_process').exec
-  , promise = require('laissez-faire')
   , request = require('hyperquest')
+  , defer = require('result/defer')
   , log = require('./logger')
   , untar = require('untar')
   , zlib = require('zlib')
@@ -43,7 +43,7 @@ handlers.http = function(url, dir){
 }
 
 handlers.git = function(url, dir){
-	return promise(function(fulfill, reject){
+	return defer(function(fulfill, reject){
 		var cmd = 'git clone --depth 1 '
 		var m = /#([^\/]+)$/.exec(url)
 		if (m) {
@@ -63,11 +63,11 @@ handlers.git = function(url, dir){
  * handle http/https requests
  * 
  * @param  {String} url
- * @return {Promise} response
+ * @return {DeferredResult} response
  */
 
 function response(url, opts){
-	return promise(function(fulfill, reject){
+	return defer(function(fulfill, reject){
 		function get(url){
 			var stream = request(url, opts)
 			stream.on('response', function(res){

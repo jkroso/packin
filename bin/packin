@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
-var Promise = require('laissez-faire/full')
-  , getDeps = require('../src/get-deps')
+var getDeps = require('../src/get-deps')
   , sliceFile = require('read-slice')
   , ghtag = require('github-latest')
   , writeFile = require('writefile')
@@ -9,7 +8,8 @@ var Promise = require('laissez-faire/full')
   , eachfile = require('dir-each')
   , log = require('../src/logger')
   , program = require('commander')
-  , fs = require('promisify/fs')
+  , fs = require('resultify/fs')
+  , Result = require('result')
   , install = require('..')
   , path = require('path')
   , format = log.format
@@ -69,7 +69,7 @@ program
 	})
 
 function parseKeyValue(kv){
-	var p = new Promise;
+	var result = new Result;
 	/([-.\w\/@]+)(?::([-.\w\/@]+))?/.exec(kv)
 	if (RegExp.$2) {
 		var key = RegExp.$1
@@ -84,18 +84,18 @@ function parseKeyValue(kv){
 		if (!key) key = RegExp.$2
 		if (RegExp.$3) {
 			value += RegExp.$3
-			p.resolve([key,value])
+			result.write([key,value])
 		} else {
 			ghtag(RegExp.$1, RegExp.$2, function(e, tag){
 				if (e) log.info('error', 'unable to find the latest tag (%s)', e.message)
 				value += (tag || 'master')
-				p.resolve([key,value])
+				result.write([key,value])
 			})
 			log.info('fetching', 'latest tag for %s/%s', RegExp.$1, RegExp.$2)
 		}
 	}
 
-	return p
+	return result
 }
 
 /**
