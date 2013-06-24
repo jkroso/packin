@@ -39,21 +39,15 @@ function deps(dir, opts){
 	})
 }
 
-var combineDeps = decorate(function(a, b, opts){
-	if (opts.dev) merge('development')
-	if (true) merge('production')
-	function merge(key){
-		if (a[key]) {
-			var deps = a[key]
-			b = b[key]
-			for (var key in b) {
-				if (!(key in deps)) deps[key] = b[key]
-			}
-		} else {
-			a[key] = b[key]
+var combineDeps = decorate(function(deps, json, opts){
+	if (opts.development) merge(json.development)
+	if (opts.production) merge(json.production)
+	function merge(json){
+		if (json) for (var key in json) {
+			if (!(key in deps)) deps[key] = json[key]
 		}
 	}
-	return a
+	return deps
 })
 
 /**

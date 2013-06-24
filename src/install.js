@@ -12,6 +12,7 @@ var cache = process.env.HOME + '/.packin/-'
 
 module.exports = install
 install.one = linkPackage
+install.mkdir = mkdir
 
 /**
  * install all dependecies of `dir`
@@ -23,18 +24,8 @@ install.one = linkPackage
 
 function install(dir, opts){
 	var folder = dir + '/' + opts.folder
-	return apply(getDeps(dir, opts), mkdir(folder), function(json){
-		var deps = json.production || {}
-		
-		// disable dev after the first iteration
-		if (opts.dev) {
-			opts.dev = false
-			log.debug('including development dependencies for %p', dir)
-			deps = merge(deps, json.development)
-		}
-
+	return apply(getDeps(dir, opts), mkdir(folder), function(deps){
 		log.debug('%p depends on %j', dir, deps)
-
 		return each(deps, function(url, name){
 			return linkPackage(url, join(folder, name), opts)
 		})
@@ -131,17 +122,10 @@ function ensureExists(url, dest, opts){
 		})
 }
 
+var seen = Object.create(null)
+
 function mkdir(folder){
 	return fs.mkdir(folder).then(null, function(e){
 		if (e.code != 'EEXIST') throw e
 	})
-}
-
-var seen = Object.create(null)
-
-function merge(a, b){
-	if (b) for (var k in b) if (!(k in a)) {
-		a[k] = b[k]
-	}
-	return a
 }

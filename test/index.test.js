@@ -60,14 +60,16 @@ describe('install', function(){
 		}).node(done)
 	})
 
-	it('should ignore development dependencies', function(done){
-		install(__dirname+'/simple').then(function(){
+	it('should be able to ignore development dependencies', function(done){
+		install(__dirname+'/simple', {
+			production:true
+		}).then(function(){
 			exists(__dirname+'/simple/deps/type').should.be.false
 		}).node(done)
 	})
 
-	it('unless told to include them', function(done){
-		install(__dirname+'/simple', {dev: true}).then(function(){
+	it('but should include them by default', function(done){
+		install(__dirname+'/simple').then(function(){
 			exists(__dirname+'/simple/deps/type').should.be.true
 		}).node(done)
 	})
@@ -207,8 +209,12 @@ describe('package.json', function(){
 		rmdir(dir + '/node_modules', done)
 	})
 
-	it('should install subdependencies', function(done){
-		install(dir, {folder: 'node_modules'}).then(function(){
+	it('should install production dependencies', function(done){
+		install(dir, {
+			files: ['package.json'],
+			folder: 'node_modules',
+			production: true
+		}).then(function(){
 			exists(dir+'/node_modules/sliced').should.be.true
 			require(dir).should.be.a('function')
 			exec('node '+__dirname+'/npm/examples/basic', function(e, out, err){
@@ -219,11 +225,10 @@ describe('package.json', function(){
 		})
 	})
 
-	it('should optionally install devDependencies', function(done){
+	it('should install devDependencies', function(done){
 		install(dir, {
 			files: ['package.json'],
-			folder: 'node_modules',
-			dev: true
+			folder: 'node_modules'
 		}).then(function(){
 			exists(dir+'/node_modules/sliced').should.be.true
 			exists(dir+'/node_modules/mocha').should.be.true
@@ -251,7 +256,8 @@ describe('modern-npm', function(){
 	it('should love it', function(done){
 		install(dir, {
 			files: ['package.json'],
-			folder: 'node_modules'
+			folder: 'node_modules',
+			production: true
 		}).then(function(){
 			exists(dir+'/node_modules/when').should.be.true
 			exists(dir+'/node_modules/laissez-faire').should.be.true
@@ -272,7 +278,8 @@ describe('invalid npm deps', function(){
 	it('should error', function(done){
 		install(dir, {
 			files: ['package.json'],
-			folder: 'node_modules'
+			folder: 'node_modules',
+			production: true
 		}).then(null, function(e){
 			e.should.be.an.instanceOf(Error)
 			e.message.should.include('not in npm')

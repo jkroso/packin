@@ -12,6 +12,7 @@ var getDeps = require('../src/get-deps')
   , Result = require('result')
   , install = require('..')
   , path = require('path')
+  , join = path.join
   , format = log.format
 
 // enable basic info
@@ -226,16 +227,15 @@ program
 		}
 	})
 
-
 program
-	.command('install [key:url]')
+	.command('install')
 	.description('install this packages dependencies')
-	.option('-D, --no-dev', 'ignore development dependencies', !cfg.dev)
-	.option('-R, --no-retrace', 'don\'t step into existing dependencies')
-	.option('-d, --development', 'install as a development dependency')
+	.option('-d, --development', 'install development dependencies')
+	.option('-p, --production', 'install production dependencies')
 	.option('-f, --folder <dir>', 'name of the directory for installed packages', cfg.folder)
 	.option('-m, --meta <files>', 'list of meta files to read', list, cfg.meta)
 	.option('-e, --executables', 'run chmod 755 on all executables')
+	.option('-R, --no-retrace', 'don\'t step into existing dependencies')
 	.on('--help', function () {
 		print('  Examples:')
 		print('')
@@ -246,57 +246,33 @@ program
 		print('    $ packin install -m component.json,package.json')
 		print('')
 	})
-	.action(function(kv, options){
-		var deps = getAllDeps()
+	.action(function(options){
 		touch(options.folder)
+		
 		var opts = {
 			folder: options.folder,
-			priority: options.meta,
+			files: options.meta,
 			log: Object.create(null),
-			dev: options.dev,
+			development: options.development,
+			production: options.production,
 			retrace: options.retrace
 		}
 
 		process.on('exit', cleanup)
-
-		if (kv) {
-			mkdir(options.folder)
-			opts.dev = false
-			if (kv in deps) {
-				return install.one(
-					deps[kv],
-					path.join(cwd, options.folder, kv),
-					opts
-				).read(complete)
-			}
-			return parseKeyValue(kv).then(function(kv){
-				var url = kv[1]
-				var name = kv[0]
-				add(name, url, options)
-				install.one(
-					url,
-					path.join(cwd, options.folder, name),
-					opts
-				).read(complete)
-			})
-		}
-
-		install(cwd, opts).read(complete)
-
-		function complete(){
-			process.removeListener('exit', cleanup)
-			if (!options.executables) return
-			return each(opts.log, function(dep){
-				return chmodExecutables(dep.location)
-			})
-		}
-
 		function cleanup(){
 			for (var dep in opts.log) {
 				dep = opts.log[dep]
-				if (dep.isNew); // TODO
+				if (dep.isNew) console.log('%p should be removed', dep.location)
 			}
 		}
+
+		install(cwd, opts).read(function(log){
+			process.removeListener('exit', cleanup)
+			if (!options.executables) return
+			return each(log, function(dep){
+				return chmodExecutables(dep.location)
+			})
+		})
 	})
 
 /**

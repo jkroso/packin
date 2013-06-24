@@ -1,10 +1,14 @@
 
 var install = require('./src/install')
+  , getDeps = require('./src/get-deps')
   , each = require('foreach/series')
   , resultify = require('resultify')
+  , apply = require('when/apply')
   , log = require('./src/logger')
   , fs = require('resultify/fs')
+  , join = require('path').join
   , rmdir = require('rmdir')
+  , mkdir = install.mkdir
 
 /**
  * install all dependecies of `dir`
@@ -17,7 +21,22 @@ var install = require('./src/install')
 module.exports = function(dir, opts){
 	if (typeof dir != 'string') opts = dir, dir = opts.target
 	addDefaults(opts || (opts = {}))
-	return install(dir, opts).then(function(){
+
+	if (opts.development == null && opts.production == null) {
+		opts.development = opts.production = true
+		var folder = dir + '/' + opts.folder
+		var result = apply(getDeps(dir, opts), mkdir(folder), function(deps){
+			// disable after first level
+			opts.development = false
+			return each(deps, function(url, name){
+				return install.one(url, join(folder, name), opts)
+			})
+		})
+	} else {
+		var result = install(dir, opts)
+	}
+
+	return result.then(function(){
 		return opts.log
 	}, cleanup(opts))
 }
@@ -79,5 +98,4 @@ function addDefaults(opts){
 	opts.files || (opts.files = defaultFiles)
 	opts.log || (opts.log = Object.create(null))
 	opts.retrace = opts.retrace !== false
-	opts.dev = opts.dev === true
 }
