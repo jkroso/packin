@@ -6,8 +6,9 @@ var exec = require('child_process').exec
   , install = require('..')
   , fs = require('fs')
   , exists = fs.existsSync
+  , readLink = fs.readlinkSync
 
-// log.enable('warn')
+// log.enable('debug')
 
 var cache = process.env.HOME + '/.packin/-'
 
@@ -120,6 +121,32 @@ describe('cleanup', function(){
 				exists(lh+'/fail/master').should.be.false
 				exists(lh+'/failing/master').should.be.false
 			})
+		}).node(done)
+	})
+})
+
+describe('merging', function(){
+	var dir = __dirname+'/merging'
+	afterEach(function(done){
+		rmdir(__dirname+'/merging/deps', done)
+	})
+
+	it('should merge dependencies from different files', function(done){
+		install(dir, {
+			files: ['deps.json', 'package.json']
+		}).then(function(log){
+			exists(dir+'/deps/equals').should.be.true
+			exists(dir+'/deps/type').should.be.true
+		}).node(done)
+	})
+
+	it('should respect priority', function(done){
+		install(dir, {
+			files: ['deps.json', 'package.json']
+		}).then(function(log){
+			exists(dir+'/deps/equals').should.be.true
+			exists(dir+'/deps/type').should.be.true
+			readLink(dir+'/deps/equals').should.not.equal(dir+'/deps/type')
 		}).node(done)
 	})
 })

@@ -1,0 +1,6 @@
+{	
+	"dependencies": {
+		"type": "http://localhost:3000/type/master",
+		"equals": "http://localhost:3000/type/master"
+	}
+}

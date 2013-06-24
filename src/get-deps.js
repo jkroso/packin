@@ -29,7 +29,7 @@ function deps(dir, opts){
 		return fs.exists(join(dir, file))
 	}).then(function(files){
 		if (!files.length) throw new Error('no meta file detected for '+dir)
-		log.debug('deps', '%p uses %j for meta data', dir, files)
+		log.debug('%p uses %j for meta data', dir, files)
 		var deps = reduce(files, function(deps, file){
 			var json = readJSON(join(dir, file))
 			json = normalize[file](json, opts)
@@ -43,9 +43,14 @@ var combineDeps = decorate(function(a, b, opts){
 	if (opts.dev) merge('development')
 	if (true) merge('production')
 	function merge(key){
-		if (!a[key]) a[key] = b[key]
-		else for (var key in b) {
-			if (!(key in a)) a[key] = b[key]
+		if (a[key]) {
+			var deps = a[key]
+			b = b[key]
+			for (var key in b) {
+				if (!(key in deps)) deps[key] = b[key]
+			}
+		} else {
+			a[key] = b[key]
 		}
 	}
 	return a
