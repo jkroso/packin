@@ -7,6 +7,7 @@ var parseJSON = require('JSONStream').parse
   , filter = require('filter/async')
   , lift = require('when-all/deep')
   , each = require('foreach/async')
+  , defer = require('result/defer')
   , fs = require('resultify/fs')
   , join = require('path').join
   , Result = require('result')
@@ -114,21 +115,21 @@ function npmUrl(name, version){
 		return 'http://github.com/'+RegExp.$1+'/tarball/'+(RegExp.$2 || 'master')
 	}
 	// semver magic
-	return download('http://registry.npmjs.org/'+name).then(function(response){
-		var result = new Result
-		response
-			.pipe(parseJSON(['versions', match(version)]))
-			.pipe(concat(function(e, versions){
-				if (e) return result.error(e)
-				if (!versions || !versions.length) {
-					return result.error(new Error(name+'@'+version+' not in npm'))
-				}
-				var latest = versions.sort(function(a,b){
-					return semver.rcompare(a.version, b.version)
-				})[0]
-				result.write(latest.dist.tarball)
-			}))
-		return result
+	return defer(function(write, fail){
+		download('http://registry.npmjs.org/'+name).then(function(response){
+			response
+				.pipe(parseJSON(['versions', match(version)]))
+				.pipe(concat(function(e, versions){
+					if (e) return fail(e)
+					if (!versions || !versions.length) {
+						return fail(new Error(name+'@'+version+' not in npm'))
+					}
+					var latest = versions.sort(function(a,b){
+						return semver.rcompare(a.version, b.version)
+					})[0]
+					write(latest.dist.tarball)
+				}))
+		})
 	})
 }
 
