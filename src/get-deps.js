@@ -1,14 +1,18 @@
 
 var parseJSON = require('JSONStream').parse
   , download = require('./download').get
+  , decorate = require('when/decorate')
   , concat = require('concat-stream')
+  , reduce = require('reduce/series')
+  , filter = require('filter/async')
+  , lift = require('when-all/deep')
   , each = require('foreach/async')
   , fs = require('resultify/fs')
   , join = require('path').join
   , Result = require('result')
   , semver = require('semver')
-  , all = require('when-all')
   , log = require('./logger')
+  , map = require('map')
 
 module.exports = deps
 
@@ -20,73 +24,56 @@ module.exports = deps
  */
 
 function deps(dir, opts){
-	var winner
-	var biggest = 0
-	var json
-	return each(opts.files, function(file){
-		var path = join(dir, file)
-		return fs.exists(path).then(function(yes){
-			if (yes) return readJSON(path).then(function(object){
-				var deps = count[file](object)
-				if (deps > biggest) {
-					winner = file
-					biggest = deps
-					json = object
-				} else if (!winner) {
-					winner = file
-					json = object
-				}
-			})
-		})
-	}).then(function(){
-		if (!winner) throw new Error('no meta file detected for '+dir)
-		log.warn('deps', '%p uses %s for meta data', dir, winner)
-		return deps[winner](json, opts)
+	return filter(opts.files, function(file){
+		return fs.exists(join(dir, file))
+	}).then(function(files){
+		if (!files.length) throw new Error('no meta file detected for '+dir)
+		log.debug('deps', '%p uses %j for meta data', dir, files)
+		var deps = reduce(files, function(deps, file){
+			var json = readJSON(join(dir, file))
+			json = normalize[file](json, opts)
+			return combineDeps(deps, json, opts)
+		}, {})
+		return lift(deps)
 	})
 }
 
-function keys(obj){
-	return (obj && Object.keys(obj).length) || 0
-}
-
-/**
- * count dependency entries
- * 
- * @param {Object} json
- * @return {Number}
- * @api private
- */
-
-var count = {
-	'deps.json': function(json){
-		return keys(json.production)
-	},
-	'component.json': function(json){
-		return keys(json.dependencies)
-	},
-	'package.json': function(json){
-		return keys(json.dependencies)
+var combineDeps = decorate(function(a, b, opts){
+	if (opts.dev) merge('development')
+	if (true) merge('production')
+	function merge(key){
+		if (!a[key]) a[key] = b[key]
+		else for (var key in b) {
+			if (!(key in a)) a[key] = b[key]
+		}
 	}
-}
-
+	return a
+})
 
 /**
- * normalise json data
+ * JSON normalizers
  * 
  * @param {Object} json
  * @return {Object}
  */
 
-deps['deps.json'] = function(json){
-	return json
-}
-
-deps['component.json'] = function(json, opts){
-	return all({
-		production: normalizeComponent(json.dependencies),
-		development: opts.dev && normalizeComponent(json.development)
-	})
-}
+var normalize = map({
+	'deps.json': function(json){
+		return json
+	},
+	'component.json': function(json, opts){
+		return {
+			production: normalizeComponent(json.dependencies),
+			development: normalizeComponent(json.development)
+		}
+	},
+	'package.json': function(json, opts){
+		return {
+			production: normalizeNpm(json.dependencies),
+			development: normalizeNpm(json.devDependencies)
+		}
+	}
+}, decorate)
 
 function normalizeComponent(deps){
 	if (!deps) return
@@ -95,7 +82,7 @@ function normalizeComponent(deps){
 		var short = name.split('/')[1]
 		res[short] = componentUrl(name, deps[name]);
 	}
-	return all(res)
+	return res
 }
 
 function componentUrl(name, version){
@@ -105,19 +92,12 @@ function componentUrl(name, version){
 	// return 'https://api.github.com/repos/'+name+'/tarball/'+version 
 }
 
-deps['package.json'] = function(json, opts){
-	return all({
-		production: normalizeNpm(json.dependencies),
-		development: opts.dev && normalizeNpm(json.devDependencies)
-	})
-}
-
 function normalizeNpm(deps){
 	if (!deps) return
 	for (var name in deps) {
 		deps[name] = npmUrl(name, deps[name])
 	}
-	return all(deps)
+	return deps
 }
 
 function npmUrl(name, version){
