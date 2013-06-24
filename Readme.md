@@ -12,7 +12,7 @@
 
 And besides it was fun to write and only small (the core algorithm fits on one screen)
 
-## Getting Started
+## Installation
 
 _With npm_  
 
@@ -20,24 +20,24 @@ _With npm_
 
 ## Usage
 
-      Usage: packin [options]
+    Usage: packin [options] [command]
     
-      Options:
+    Commands:
     
-        -h, --help             output usage information
-        -V, --version          output the version number
-        -d, --no-dev           ignore development dependencies
-        -t, --target <dir>     name of the directory for installed packages
-        -m, --meta <files...>  list of meta files to read
+      add [options] <key:url> add a package to this packages dependencies
+      url <shorthand>        expand shorthand to a full url
+      ls [options]           display this packages dependencies
+      rm [options] <key>     remove a package from this packages dependencies
+      install [options]      install this packages dependencies
+      links                  list packages available for linking to
+      link [options] [name]  link to a local package or register this one
+      unlink [options] [name] unlink a local package or unregister this one
     
-      Examples:
+    Options:
     
-        # to emulate npm
-        $ packin -m package.json -t node_modules
-    
-        # to use components with browserify
-        $ packin -m component.json,package.json -t node_modules
-
+      -h, --help     output usage information
+      -V, --version  output the version number
+      -v, --verbose  turn up the logging
 
 ## Running the tests
 
@@ -45,7 +45,3 @@ _With npm_
 $ npm install
 $ node test/server & make test
 ```
-
-## License 
-
-[MIT](License)
