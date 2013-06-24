@@ -8,6 +8,7 @@ var getDeps = require('../src/get-deps')
   , eachfile = require('dir-each')
   , log = require('../src/logger')
   , program = require('commander')
+  , apply = require('when/apply')
   , fs = require('resultify/fs')
   , Result = require('result')
   , install = require('..')
@@ -158,17 +159,20 @@ program
 	.description('display this packages dependencies')
 	.option('-f, --folder <dir>', 'dependency directory', cfg.folder)
 	.action(function(opts){
-		getDeps(cwd, {
-			priority: cfg.meta,
-			dev: true
-		}).then(function(deps){
-			console.log()
-			show('production')
-			show('development')
+		var dev = getDeps(cwd, {
+			files: cfg.meta,
+			development: true
+		})
+		var pro = getDeps(cwd, {
+			files: cfg.meta,
+			production: true
+		})
+		apply(dev, pro, function(development, production){
+			print('')
+			show('production', production)
+			show('development', development)
 			
-			function show(key){
-				var obj = deps[key]
-				if (!obj) return
+			function show(key, obj){
 				var keys = Object.keys(obj)
 				if (!keys.length) return
 				print(format('  %s', blue(key)))
@@ -185,11 +189,12 @@ program
 			var locals = getLocals()
 
 			var links = fs.readdirSync(cwd+'/'+opts.folder).filter(function(file){
-				if (deps.production && file in deps.production
-				|| (deps.development && file in deps.development)
+				if (file in production
+				|| (file in development)
 				|| !(file in locals)) return false
-				var stat = fs.lstatSync(path.join(cwd, opts.folder, file))
-				return stat.isSymbolicLink()
+				return fs
+					.lstatSync(path.join(cwd, opts.folder, file))
+					.isSymbolicLink()
 			})
 
 			if (links.length) { 
@@ -378,8 +383,6 @@ function saveLocals(obj){
 program
 	.command('links')
 	.description('list packages available for linking to')
-	// TODO
-	// .option('-u, --used', 'list the linked packages this one is using')
 	.action(function(){
 		var locals = getLocals()
 		var keys = Object.keys(locals)
