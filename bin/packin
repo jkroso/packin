@@ -99,23 +99,6 @@ function parseKeyValue(kv){
 }
 
 /**
- * getdeps object with production and development 
- * dependencies merged together
- * 
- * @param {String} [json='./deps.json']
- * @return {Object}
- */
-
-function getAllDeps(json){
-	json = getJSON(json)
-	var deps = json.production || {}
-	if (json.development) for (var k in json.development) {
-		deps[k] = json.development[k]
-	}
-	return deps
-}
-
-/**
  * get the deps.json file's data
  * 
  * @param {String} [file=./deps.json]
