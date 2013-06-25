@@ -13,7 +13,6 @@ var getDeps = require('../src/get-deps')
   , Result = require('result')
   , install = require('..')
   , path = require('path')
-  , join = path.join
   , format = log.format
 
 // enable basic info
@@ -29,9 +28,8 @@ var cwd = process.cwd()
 var cfg = fs.existsSync(home+'/config.json')
 	? require(home+'/config.json')
 	: {}
-if (!('folder' in cfg)) cfg.folder = 'dev'
-if (!('meta' in cfg)) cfg.meta = ['deps.json', 'component.json', 'package.json']
-if (!('dev' in cfg)) cfg.dev = true
+'folder' in cfg || (cfg.folder = 'deps')
+'meta' in cfg   || (cfg.meta = ['deps.json', 'component.json', 'package.json'])
 
 program
 	.version(require('../package').version)
