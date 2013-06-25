@@ -23,8 +23,7 @@ declare -a json=(
 	"    \"deps.json\","
 	"    \"component.json\","
 	"    \"package.json\""
-	"  ],"
-	"  \"dev\": true"
+	"  ]"
 	"}"
 )
 
