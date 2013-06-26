@@ -28,6 +28,7 @@ module.exports = function(dir, opts){
 		var result = apply(getDeps(dir, opts), mkdir(folder), function(deps){
 			// disable after first level
 			opts.development = false
+			log.debug('%p depends on %j', dir, deps)
 			return each(deps, function(url, name){
 				return install.one(url, join(folder, name), opts)
 			})

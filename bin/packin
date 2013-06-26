@@ -248,7 +248,7 @@ program
 		function cleanup(){
 			for (var dep in opts.log) {
 				dep = opts.log[dep]
-				if (dep.isNew) console.log('%p should be removed', dep.location)
+				if (dep.isNew) console.log('%s should be removed', dep.location)
 			}
 		}
 
