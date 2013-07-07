@@ -170,12 +170,9 @@ program
 				print('')
 			}
 
-			var locals = getLocals()
-
 			var links = fs.readdirSync(cwd+'/'+opts.folder).filter(function(file){
 				if (file in production
-				|| (file in development)
-				|| !(file in locals)) return false
+				|| (file in development)) return false
 				return fs
 					.lstatSync(path.join(cwd, opts.folder, file))
 					.isSymbolicLink()
