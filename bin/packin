@@ -162,6 +162,9 @@ program
 					if (/github\.com\/([^\/]+)\/([^\/]+)\/tarball\/(.+)/.test(url)) {
 						url = RegExp.$1 + '/' + RegExp.$2 + '@' + RegExp.$3
 					}
+					if (/registry\.npmjs\.org\/[^\/]+\/-\/(.*)-(.*)\.tgz/.test(url)) {
+						url = RegExp.$1 + '@' + RegExp.$2
+					}
 					print(format('    %s %s', blue(key), url))
 				})
 				print('')
