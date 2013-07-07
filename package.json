@@ -1,6 +1,6 @@
 {
   "name": "packin",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "a simple package manager",
   "dependencies": {
     "github-latest": "http://github.com/jkroso/github-latest/tarball/fe495ff",

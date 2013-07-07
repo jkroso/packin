@@ -123,7 +123,7 @@ function npmUrl(name, version){
 					if (!versions || !versions.length) {
 						return fail(new Error(name+'@'+version+' not in npm'))
 					}
-					var latest = versions.sort(function(a,b){
+					var latest = versions.sort(function(a, b){
 						return semver.rcompare(a.version, b.version)
 					})[0]
 					write(latest.dist.tarball)
@@ -132,9 +132,9 @@ function npmUrl(name, version){
 	})
 }
 
-function match(version){
-	return function(compare){
-		return semver.satisfies(compare, version)
+function match(spec){
+	return function(version){
+		return semver.valid(version) && semver.satisfies(version, spec)
 	}
 }
 

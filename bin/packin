@@ -25,11 +25,11 @@ var cwd = process.cwd()
 
 // load default config
 
-var cfg = fs.existsSync(home+'/config.json')
+var defaults = fs.existsSync(home+'/config.json')
 	? require(home+'/config.json')
 	: {}
-'folder' in cfg || (cfg.folder = 'deps')
-'meta' in cfg   || (cfg.meta = ['deps.json', 'component.json', 'package.json'])
+'folder' in defaults || (defaults.folder = 'deps')
+'meta' in defaults   || (defaults.meta = ['deps.json', 'component.json', 'package.json'])
 
 program
 	.version(require('../package').version)
@@ -138,14 +138,14 @@ function add(key, url, opts){
 program
 	.command('ls')
 	.description('display this packages dependencies')
-	.option('-f, --folder <dir>', 'dependency directory', cfg.folder)
+	.option('-f, --folder <dir>', 'dependency directory', defaults.folder)
 	.action(function(opts){
 		var dev = getDeps(cwd, {
-			files: cfg.meta,
+			files: defaults.meta,
 			development: true
 		})
 		var pro = getDeps(cwd, {
-			files: cfg.meta,
+			files: defaults.meta,
 			production: true
 		})
 		apply(dev, pro, function(development, production){
@@ -197,7 +197,7 @@ program
 	.command('rm <key>')
 	.description('remove a package from this packages dependencies')
 	.option('-d, --development', 'add as a development dependency')
-	.option('-f, --folder <dir>', 'dependency folder', cfg.folder)
+	.option('-f, --folder <dir>', 'dependency folder', defaults.folder)
 	.action(function(name, opts){
 		var pkg = cwd + '/deps.json'
 		var json = require(pkg)
@@ -218,8 +218,8 @@ program
 	.description('install this packages dependencies')
 	.option('-d, --development', 'install development dependencies')
 	.option('-p, --production', 'install production dependencies')
-	.option('-f, --folder <dir>', 'name of the directory for installed packages', cfg.folder)
-	.option('-m, --meta <files>', 'list of meta files to read', list, cfg.meta)
+	.option('-f, --folder <dir>', 'name of the directory for installed packages', defaults.folder)
+	.option('-m, --meta <files>', 'list of meta files to read', list, defaults.meta)
 	.option('-e, --executables', 'run chmod 755 on all executables')
 	.option('-R, --no-retrace', 'don\'t step into existing dependencies')
 	.on('--help', function () {
@@ -380,7 +380,7 @@ program
 program
 	.command('link [name]')
 	.description('link to a local package or register this one')
-	.option('-f, --folder <dir>', 'name of the directory for installed packages', cfg.folder)
+	.option('-f, --folder <dir>', 'name of the directory for installed packages', defaults.folder)
 	.option('-n, --name <name>', 'set the name of this package when making it linkable')
 	.on('--help', function(){
 		print('  Examples:')
@@ -412,7 +412,7 @@ program
 program
 	.command('unlink [name]')
 	.description('unlink a local package or unregister this one')
-	.option('-f, --folder <dir>', 'name of the directory for installed packages', cfg.folder)
+	.option('-f, --folder <dir>', 'name of the directory for installed packages', defaults.folder)
 	.option('-n, --name <name>', 'set the name of this package when making it linkable')
 	.action(function(pkg, opts){
 		// deregister this package
