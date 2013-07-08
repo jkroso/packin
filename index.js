@@ -7,7 +7,7 @@ var install = require('./src/install')
   , log = require('./src/logger')
   , fs = require('resultify/fs')
   , join = require('path').join
-  , rmdir = require('rmdir')
+  , rmdir = require('rmdir/sync')
   , mkdir = install.mkdir
 
 /**
@@ -54,18 +54,13 @@ module.exports = function(dir, opts){
 function cleanup(options){
 	return function(e){
 		log.warn('failed', '%s', e.message)
-		return each(options.log, function(dep){
-			if (dep.isNew) {
-				return fs.exists(dep.location).then(function(exists){
-					if (exists) {
-						log.warn('removing', '%p', dep.location)
-						return rmdir(dep.location)
-					}
-				})
+		each(options.log, function(dep, p){
+			if (dep.isNew && fs.existsSync(dep.location)) {
+				log.warn('removing', '%p', dep.location)
+				rmdir(dep.location)
 			}
-		}).then(function(){
-			throw e
 		})
+		throw e
 	}
 }
 

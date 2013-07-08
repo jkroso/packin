@@ -30,7 +30,7 @@ function rmdir(dir, cb){
 	exec('rm -rf '+dir, cb)
 }
 
-afterEach(function(done){
+beforeEach(function(done){
 	rmdir(cache+'/localhost:3000', done)
 })
 
@@ -106,16 +106,17 @@ describe('install', function(){
 })
 
 describe('cleanup', function(){
+	// localhost install directory
+	var lh = cache + '/localhost:3000'
 	var dir = __dirname+'/error'
 	afterEach(function(done){
 		rmdir(__dirname+'/error/deps', done)
 	})
-	// localhost install directory
-	var lh = cache + '/localhost:3000'
 	it('should remove all new dependencies', function(done){
 		install(__dirname+'/simple').then(function(logA){
 			exists(lh+'/equals/master').should.be.true
 			exists(lh+'/type/master').should.be.true
+			exists(lh+'/failing/master').should.be.false
 			return install(dir).then(null, function(e){
 				expect(e).to.be.an.instanceOf(Error)
 				exists(lh+'/equals/master').should.be.true

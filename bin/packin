@@ -11,6 +11,7 @@ var getDeps = require('../src/get-deps')
 	, log = require('../src/logger')
 	, program = require('commander')
 	, apply = require('when/apply')
+	, rmdir = require('rmdir/sync')
 	, fs = require('resultify/fs')
 	, Result = require('result')
 	, map = require('map/async')
@@ -324,11 +325,10 @@ program
 
 		process.on('exit', cleanup)
 		function cleanup(code, sig){
-			console.log('exited with code:%s, signal:%s', code, sig)
-			for (var dep in opts.log) {
-				dep = opts.log[dep]
-				if (dep.isNew) console.log('%s should be removed', dep.location)
-			}
+			console.log('  exited with code:%s', code)
+			each(opts.log, function(dep){
+				if (dep.isNew) rmdir(dep.location)
+			})
 		}
 
 		install(cwd, opts).read(function(log){

@@ -4,7 +4,7 @@
   "description": "a simple package manager",
   "dependencies": {
     "github-latest": "http://github.com/jkroso/github-latest/tarball/0.2.0",
-    "rmdir": "http://github.com/jkroso/node.rmdir/tarball/1.2.0",
+    "rmdir": "http://github.com/jkroso/node.rmdir/tarball/1.2.1",
     "foreach": "http://github.com/jkroso/forEach/tarball/0.8.5",
     "reduce": "http://github.com/jkroso/reduce/tarball/0.1.1",
     "filter": "http://github.com/jkroso/filter/tarball/0.1.0",
