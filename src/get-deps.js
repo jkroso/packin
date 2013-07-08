@@ -1,13 +1,11 @@
 
-var parseJSON = require('JSONStream').parse
-  , download = require('./download').get
+var download = require('./download').get
+  , latestNPM = require('./latest-npm').url
   , decorate = require('when/decorate')
-  , concat = require('concat-stream')
   , reduce = require('reduce/series')
   , filter = require('filter/async')
   , lift = require('when-all/deep')
   , each = require('foreach/async')
-  , defer = require('result/defer')
   , fs = require('resultify/fs')
   , join = require('path').join
   , Result = require('result')
@@ -114,28 +112,7 @@ function npmUrl(name, version){
 		return 'http://github.com/'+RegExp.$1+'/tarball/'+(RegExp.$2 || 'master')
 	}
 	// semver magic
-	return defer(function(write, fail){
-		download('http://registry.npmjs.org/'+name).then(function(response){
-			response
-				.pipe(parseJSON(['versions', match(version)]))
-				.pipe(concat(function(e, versions){
-					if (e) return fail(e)
-					if (!versions || !versions.length) {
-						return fail(new Error(name+'@'+version+' not in npm'))
-					}
-					var latest = versions.sort(function(a, b){
-						return semver.rcompare(a.version, b.version)
-					})[0]
-					write(latest.dist.tarball)
-				}))
-		})
-	})
-}
-
-function match(spec){
-	return function(version){
-		return semver.valid(version) && semver.satisfies(version, spec)
-	}
+	return latestNPM(name, version)
 }
 
 function readJSON(file){

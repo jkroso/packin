@@ -4,6 +4,7 @@ var getDeps = require('../src/get-deps')
 	, sliceFile = require('read-slice')
 	, resultify = require('resultify')
 	, ghtag = resultify(require('github-latest'))
+	, latestNPM = require('../src/latest-npm')
 	, writeFile = require('writefile')
 	, each = require('foreach/async')
 	, eachfile = require('dir-each')
@@ -142,25 +143,32 @@ function parseKeyValue(kv){
 	}
 
 	// github shorthand
-	if (/^([-.\w]+)\/([-.\w]+)(?:@([-.\w]+|\d+\.\d+\.\d+))?$/.exec(value)) {
-		value = 'http://github.com/'+RegExp.$1+'/'+RegExp.$2+'/tarball/'
+	if (/^([-.\w]+)\/([-.\w]+)(?:@(.*))?$/.exec(value)) {
+		var url = 'http://github.com/'+RegExp.$1+'/'+RegExp.$2+'/tarball/'
 		var user = RegExp.$1
 		var repo = RegExp.$2
 		var tag = RegExp.$3
 		if (!key) key = repo
-		if (tag) return Result.wrap([key, value + tag])
-		return latestGH.then(function(tag){
-			return [key, value + tag]
+		if (tag) return Result.wrap([key, url + tag])
+		log.info('fetching', 'latest tag for %s/%s', user, repo)
+		return ghtag(user, repo)
+			.then(null, function(e){
+				log.info('error', '%s. cant find latest tag for %s', e && e.message, repo)
+				return 'master'
+			})
+			.then(function(tag){
+				return [key, url + tag]
+			})
+	}
+
+	// npm.org
+	if (/^(.+)(?:@(.*))?$/.exec(value)) {
+		var pkg = RegExp.$1
+		var version = RegExp.$2 || '*'
+		return latestNPM.url(pkg, version).then(function(url){
+			return [pkg, url]
 		})
 	}
-}
-
-function latestGH(user, repo){
-	log.info('fetching', 'latest tag for %s/%s', user, repo)
-	return ghtag(user, repo).then(null, function(e){
-		log.info('error', '%s. cant find latest tag for %s', e && e.message, repo)
-		return 'master'
-	})
 }
 
 /**
