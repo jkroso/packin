@@ -264,7 +264,7 @@ program
 				})
 				print('')
 			}
-		})
+		}).read()
 	})
 
 function blue(text){
