@@ -268,22 +268,42 @@ describe('modern-npm', function(){
 	})
 })
 
-describe('invalid npm deps', function(){
-	this.timeout(false)
-	var dir = __dirname+'/bad-npm/invalid-version'
+describe('npm errors', function(){
+	var dir
+	var opts = {
+		files: ['package.json'],
+		folder: 'node_modules',
+		production: true
+	}
 	afterEach(function(done){
 		rmdir(dir+'/node_modules', done)
 	})
+	this.timeout(false)
 
-	it('should error', function(done){
-		install(dir, {
-			files: ['package.json'],
-			folder: 'node_modules',
-			production: true
-		}).then(null, function(e){
-			e.should.be.an.instanceOf(Error)
-			e.message.should.include('not in npm')
-			done()
+	describe('invalid npm deps', function(){
+		before(function(){
+			dir = __dirname+'/bad-npm/invalid-version'
+		})
+
+		it('should error', function(done){
+			install(dir, opts).then(null, function(e){
+				e.should.be.an.instanceOf(Error)
+				e.message.should.include('not in npm')
+				done()
+			})
+		})
+	})
+
+	describe('invalid formatting', function(){
+		before(function(){
+			dir = __dirname+'/bad-npm/misformating'
+		})
+
+		it('should error', function(done){
+			install(dir, opts).then(null, function(e){
+				e.should.be.an.instanceOf(Error)
+				done()
+			})
 		})
 	})
 })

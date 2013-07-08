@@ -323,7 +323,8 @@ program
 		}
 
 		process.on('exit', cleanup)
-		function cleanup(){
+		function cleanup(code, sig){
+			console.log('exited with code:%s, signal:%s', code, sig)
 			for (var dep in opts.log) {
 				dep = opts.log[dep]
 				if (dep.isNew) console.log('%s should be removed', dep.location)
