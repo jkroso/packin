@@ -1,19 +1,22 @@
 #!/usr/bin/env node
 
 var getDeps = require('../src/get-deps')
-  , sliceFile = require('read-slice')
-  , ghtag = require('github-latest')
-  , writeFile = require('writefile')
-  , each = require('foreach/async')
-  , eachfile = require('dir-each')
-  , log = require('../src/logger')
-  , program = require('commander')
-  , apply = require('when/apply')
-  , fs = require('resultify/fs')
-  , Result = require('result')
-  , install = require('..')
-  , path = require('path')
-  , format = log.format
+	, sliceFile = require('read-slice')
+	, resultify = require('resultify')
+	, ghtag = resultify(require('github-latest'))
+	, writeFile = require('writefile')
+	, each = require('foreach/async')
+	, eachfile = require('dir-each')
+	, log = require('../src/logger')
+	, program = require('commander')
+	, apply = require('when/apply')
+	, fs = require('resultify/fs')
+	, Result = require('result')
+	, map = require('map/async')
+	, all = require('when-all')
+	, install = require('..')
+	, path = require('path')
+	, format = log.format
 
 // enable basic info
 
@@ -60,6 +63,67 @@ program
 	})
 
 program
+	.command('update [dep]')
+	.description('update deps to their latest release')
+	.action(function(dep){
+		var json = getJSON()
+		var pending = 0
+		if (dep) {
+			var deps = json.production && dep in json.production
+				? json.production
+				: json.development
+			if (!(dep in deps)) throw new Error(dep + ' not installed')
+			return apply(update(deps[dep], dep), function(url){
+				deps[dep] = url
+			}).read(function(){
+				saveJSON(json)
+				clearLine()
+			})
+		}
+		if (json.production) json.production = map(json.production, update)
+		if (json.development) json.development = map(json.development, update)
+		all(json).read(function(json){
+			saveJSON(json)
+			clearLine()
+		})
+		function update(url, key){
+			if (/github\.com\/([^\/]+)\/([^\/]+)\/tarball\/(.*)/.test(url)) {
+				var user = RegExp.$1
+				var repo = RegExp.$2
+				var oldtag = RegExp.$3
+				clearLine()
+				writePending(++pending)
+				return ghtag(user, repo).then(function(tag){
+					var newurl = 'http://github.com/' + user + '/' + repo + '/tarball/' + tag
+					clearLine()
+					if (newurl != url) {
+						log.info('updated', '%s/%s from %s to %s', user, repo, oldtag, tag)
+					} else {
+						log.info('ok', '%s/%s@%d', user, repo, tag)
+					}
+					return newurl
+				}, function(e){
+					clearLine()
+					log.info('error', '%s. cant find latest tag for %s', e && e.message, repo)
+					return url
+				}).then(function(url){
+					writePending(--pending)
+					return url
+				})
+			}
+			return url
+		}
+	})
+
+function writePending(pending){
+	process.stdout.write(blue('\r » ' + pending + ' pending'))
+}
+function clearLine(){
+	process.stdout.write('\033[2K')
+	process.stdout.write('\033[0G')
+}
+
+program
 	.command('url <shorthand>')
 	.description('expand shorthand to a full url')
 	.action(function(short){
@@ -69,7 +133,6 @@ program
 	})
 
 function parseKeyValue(kv){
-	var result = new Result;
 	/([-.\w\/@]+)(?::([-.\w\/@]+))?/.exec(kv)
 	if (RegExp.$2) {
 		var key = RegExp.$1
@@ -81,21 +144,23 @@ function parseKeyValue(kv){
 	// github shorthand
 	if (/^([-.\w]+)\/([-.\w]+)(?:@([-.\w]+|\d+\.\d+\.\d+))?$/.exec(value)) {
 		value = 'http://github.com/'+RegExp.$1+'/'+RegExp.$2+'/tarball/'
-		if (!key) key = RegExp.$2
-		if (RegExp.$3) {
-			value += RegExp.$3
-			result.write([key,value])
-		} else {
-			ghtag(RegExp.$1, RegExp.$2, function(e, tag){
-				if (e) log.info('error', 'unable to find the latest tag (%s)', e.message)
-				value += (tag || 'master')
-				result.write([key,value])
-			})
-			log.info('fetching', 'latest tag for %s/%s', RegExp.$1, RegExp.$2)
-		}
+		var user = RegExp.$1
+		var repo = RegExp.$2
+		var tag = RegExp.$3
+		if (!key) key = repo
+		if (tag) return Result.wrap([key, value + tag])
+		return latestGH.then(function(tag){
+			return [key, value + tag]
+		})
 	}
+}
 
-	return result
+function latestGH(user, repo){
+	log.info('fetching', 'latest tag for %s/%s', user, repo)
+	return ghtag(user, repo).then(null, function(e){
+		log.info('error', '%s. cant find latest tag for %s', e && e.message, repo)
+		return 'master'
+	})
 }
 
 /**
@@ -109,6 +174,11 @@ function getJSON(file){
 	file || (file = cwd + '/deps.json')
 	if (!fs.existsSync(file)) return {}
 	return JSON.parse(fs.readFileSync(file, 'utf8'))
+}
+
+function saveJSON(json, file){
+	file || (file = cwd + '/deps.json')
+	fs.writeFileSync(file, JSON.stringify(json, null, 2))
 }
 
 /**
@@ -132,7 +202,7 @@ function add(key, url, opts){
 
 	log.info(key, url)
 	deps[key] = url
-	fs.writeFileSync(file, JSON.stringify(json, null, 2))
+	saveJSON(json, file)
 }
 
 program
@@ -287,8 +357,8 @@ function chmodExecutables(dir){
  */
 
 function touch(path) {
-  try { fs.utimesSync(path, new Date, new Date) }
-  catch (err) {}
+	try { fs.utimesSync(path, new Date, new Date) }
+	catch (err) {}
 }
 
 /**
