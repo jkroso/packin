@@ -17,14 +17,14 @@ if [[ ! -f "${PCKHOME}/links.json" ]]; then
 fi
 
 declare -a json=(
-	"{"
-	"  \"folder\": \"node_modules\","
-	"  \"meta\": ["
-	"    \"deps.json\","
-	"    \"component.json\","
-	"    \"package.json\""
-	"  ]"
-	"}"
+	'{'
+	'  "folder": "node_modules",'
+	'  "meta": ['
+	'    "package.json",'
+	'    "component.json",'
+	'    "deps.json"'
+	'  ]'
+	'}'
 )
 
 if [[ ! -f "${PCKHOME}/config.json" ]]; then
