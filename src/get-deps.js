@@ -1,14 +1,11 @@
 
-var download = require('./download').get
-  , latestNPM = require('./latest-npm').url
+var latestNPM = require('./latest-npm').url
   , decorate = require('when/decorate')
   , reduce = require('reduce/series')
   , filter = require('filter/async')
   , lift = require('when-all/deep')
-  , each = require('foreach/async')
   , fs = require('resultify/fs')
   , join = require('path').join
-  , Result = require('result')
   , semver = require('semver')
   , log = require('./logger')
   , map = require('map')

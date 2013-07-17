@@ -1,13 +1,10 @@
 
 var exec = require('child_process').exec
-  , request = require('hyperquest')
-  , defer = require('result/defer')
-  , log = require('./logger')
-  , untar = require('untar')
-  , zlib = require('zlib')
-
-module.exports = download
-download.get = response
+	, defer = require('result/defer')
+	, get = require('./http-get')
+	, log = require('./logger')
+	, untar = require('untar')
+	, zlib = require('zlib')
 
 /**
  * download a repo to a directory
@@ -17,7 +14,7 @@ download.get = response
  * @return {Promise} nil
  */
 
-function download(url, dir){
+module.exports = function(url, dir){
 	var protocol = url.match(/^(\w+):\/\//)[1]
 	log.info('fetching', url)
 	if (protocol in handlers) return handlers[protocol](url, dir)
@@ -25,12 +22,12 @@ function download(url, dir){
 }
 
 var handlers = Object.create(null)
-var opts = { headers: {'Accept-encoding': 'gzip'}}
+var headers = {'Accept-encoding': 'gzip'}
 
 handlers.https =
 handlers.http = function(url, dir){
-	return response(url, opts).then(function(res){
-		var headers = res.response.headers
+	return get(url, headers).then(function(res){
+		var headers = res.headers
 		if (/(deflate|gzip)$/.test(headers['content-encoding'])
 		|| (/(deflate|gzip)$/).test(headers['content-type'])
 		|| (/registry\.npmjs\.org/).test(url)) {
@@ -42,47 +39,17 @@ handlers.http = function(url, dir){
 	})
 }
 
-handlers.git = function(url, dir){
-	return defer(function(fulfill, reject){
-		var cmd = 'git clone --depth 1 '
-		var m = /#([^\/]+)$/.exec(url)
-		if (m) {
-			cmd += url.slice(0, m.index) + ' ' + dir + ' --branch ' + m[1] 
-		} else {
-			cmd	+= url + ' ' + dir
-		}
-		log.warn('exec', '%s', cmd)
-		exec(cmd, function(e, so, se){
-			if (e) reject(new Error(e.message))
-			else fulfill()
-		})
+handlers.git = function(url, dir){ return defer(function(write, error){
+	var cmd = 'git clone --depth 1 '
+	var m = /#([^\/]+)$/.exec(url)
+	if (m) {
+		cmd += url.slice(0, m.index) + ' ' + dir + ' --branch ' + m[1] 
+	} else {
+		cmd	+= url + ' ' + dir
+	}
+	log.warn('exec', '%s', cmd)
+	exec(cmd, function(e, so, se){
+		if (e) error(new Error(e.message))
+		else write()
 	})
-}
-
-/**
- * handle http/https requests
- * 
- * @param  {String} url
- * @return {DeferredResult} response
- */
-
-function response(url, opts){
-	return defer(function(fulfill, reject){
-		function get(url){
-			var stream = request(url, opts)
-			stream.on('response', function(res){
-				var status = res.statusCode
-				if (status > 300 && status < 308) {
-					get(res.headers.location)
-				} else if (status != 200) {
-					reject(new Error(url + ' -> ' + status))
-				} else {
-					stream.removeListener('error', reject)
-					fulfill(stream)
-				}
-			})
-			stream.on('error', reject)
-		}
-		get(url)
-	})
-}
+})}

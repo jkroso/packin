@@ -1,9 +1,9 @@
 
 var parseJSON = require('JSONStream').parse
-  , download = require('./download').get
   , concat = require('concat-stream')
-  , semver = require('semver')
   , defer = require('result/defer')
+  , get = require('./http-get')
+  , semver = require('semver')
 
 exports.tag = latestTag
 
@@ -16,8 +16,8 @@ exports.tag = latestTag
  */
 
 function latestTag(name, vSpec){ return defer(function(write, fail){
-	download('http://registry.npmjs.org/'+name).then(function(resp){
-		resp.pipe(parseJSON(['versions', match(vSpec)]))
+	get('http://registry.npmjs.org/'+name).then(function(res){
+		res.pipe(parseJSON(['versions', match(vSpec)]))
 			.pipe(concat(function(e, versions){
 				if (e) return fail(e)
 				if (!versions || !versions.length) {

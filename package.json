@@ -1,6 +1,6 @@
 {
   "name": "packin",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "a simple package manager",
   "dependencies": {
     "github-latest": "http://github.com/jkroso/github-latest/tarball/0.2.0",
@@ -11,7 +11,6 @@
     "when": "http://github.com/jkroso/when/tarball/3.2.4",
     "map": "http://github.com/jkroso/map/tarball/0.2.6",
     "concat-stream": "0.1.1",
-    "hyperquest": "0.1.4",
     "read-slice": "0.2.2",
     "JSONStream": "0.6.4",
     "writefile": "0.2.2",
@@ -19,7 +18,7 @@
     "resultify": "0.2.4",
     "dir-each": "0.3.1",
     "when-all": "0.4.3",
-    "semver": "2.0.7",
+    "semver": "2.0.10",
     "result": "0.3.1",
     "untar": "0.2.1"
   },
