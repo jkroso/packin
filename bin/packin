@@ -249,13 +249,19 @@ program
 				print('')
 			}
 
-			var links = fs.readdirSync(cwd+'/'+opts.folder).filter(function(file){
-				if (file in production
-				|| (file in development)) return false
-				return fs
-					.lstatSync(path.join(cwd, opts.folder, file))
-					.isSymbolicLink()
+			var dir = cwd + '/' + opts.folder
+			var links = fs.readdirSync(dir).filter(function(name){
+				var file = path.join(dir, name)
+				if (!fs.lstatSync(file).isSymbolicLink()) return false
+				var link = fs.readlinkSync(file)
+				if (production[name] && linked(link, production[name])) return false
+				if (development[name] && linked(link, development[name])) return false
+				return true
 			})
+
+			function linked(link, url){
+				return link.indexOf(url.replace(/\w+:\/\//, '')) > 0
+			}
 
 			if (links.length) { 
 				print(blue('  links'))
