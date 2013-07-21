@@ -11,6 +11,7 @@
     "when": "http://github.com/jkroso/when/tarball/3.2.4",
     "map": "http://github.com/jkroso/map/tarball/0.2.6",
     "concat-stream": "0.1.1",
+    "result-type": "1.0.0",
     "read-slice": "0.2.3",
     "JSONStream": "0.6.4",
     "writefile": "0.2.3",
@@ -20,7 +21,7 @@
     "when-all": "0.4.4",
     "semver": "2.0.10",
     "result": "0.3.1",
-    "untar": "0.2.2"
+    "untar": "0.2.3"
   },
   "devDependencies": {
     "fs-equals": "0.2.4",
