@@ -1,6 +1,6 @@
 {
   "name": "packin",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "a simple package manager",
   "dependencies": {
     "github-latest": "http://github.com/jkroso/github-latest/tarball/0.2.1",
@@ -8,7 +8,7 @@
     "foreach": "http://github.com/jkroso/forEach/tarball/0.8.5",
     "reduce": "http://github.com/jkroso/reduce/tarball/0.1.2",
     "filter": "http://github.com/jkroso/filter/tarball/0.1.1",
-    "when": "http://github.com/jkroso/when/tarball/3.2.4",
+    "when": "http://github.com/jkroso/when/tarball/3.3.1",
     "map": "http://github.com/jkroso/map/tarball/0.2.6",
     "concat-stream": "0.1.1",
     "result-type": "1.0.0",
@@ -20,7 +20,7 @@
     "dir-each": "0.3.4",
     "when-all": "0.4.4",
     "semver": "2.0.10",
-    "result": "0.3.1",
+    "result": "0.3.3",
     "untar": "0.2.3"
   },
   "devDependencies": {
@@ -30,7 +30,7 @@
     "chai": "1.7.2"
   },
   "scripts": {
-    "install": "bin/on-install.sh && npm dedupe"
+    "install": "bin/on-install.sh"
   },
   "repository": {
     "type": "git",

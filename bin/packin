@@ -99,20 +99,41 @@ program
 					var newurl = 'http://github.com/' + user + '/' + repo + '/tarball/' + tag
 					clearLine()
 					if (newurl != url) {
-						log.info('updated', '%s/%s from %s to %s', user, repo, oldtag, tag)
+						log.info('++', '%s/%s from %s to %s', user, repo, oldtag, tag)
 					} else {
-						log.info('ok', '%s/%s@%d', user, repo, tag)
+						log.info('==', '%s/%s@%d', user, repo, tag)
 					}
 					return newurl
 				}, function(e){
 					clearLine()
-					log.info('error', '%s. cant find latest tag for %s', e && e.message, repo)
+					log.info('failed update', '%s/%s: %s', user, repo, e && e.message)
 					return url
-				}).then(function(url){
-					writePending(--pending)
-					return url
-				})
+				}).then(succeed)
 			}
+			if (/registry\.npmjs\.org\/([^\/]+)\/-\/[^\/]+-(.+)\.tgz/.test(url)) {
+				var pkg = RegExp.$1
+				var version = RegExp.$2
+				clearLine()
+				writePending(++pending)
+				return latestNPM.tag(pkg, '>=' + version).then(function(latest){
+					clearLine()
+					if (version != latest) {
+						log.info('++', '%s from %s to %s', pkg, version, latest)
+					} else {
+						log.info('==', '%s@%d', pkg, version)
+					}
+					return 'http://registry.npmjs.org/'+pkg+'/-/'+pkg+'-'+latest+'.tgz'
+				}, function(e){
+					clearLine()
+					log.info('failed update', '%s@%s: %s', pkg, version, e && e.message)
+					return url
+				}).then(succeed)
+			}
+			return url
+		}
+
+		function succeed(url){
+			writePending(--pending)
 			return url
 		}
 	})
@@ -120,9 +141,9 @@ program
 function writePending(pending){
 	process.stdout.write(blue('\r » ' + pending + ' pending'))
 }
+
 function clearLine(){
-	process.stdout.write('\033[2K')
-	process.stdout.write('\033[0G')
+	process.stdout.write('\033[2K\033[0G')
 }
 
 program
