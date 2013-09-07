@@ -1,12 +1,28 @@
 
+var spawn = require('child_process').spawn
 var exec = require('child_process').exec
-  , equal = require('fs-equals/assert')
-  , log = require('../src/logger')
-  , chai = require('./chai')
-  , install = require('..')
-  , fs = require('fs')
-  , exists = fs.existsSync
-  , readLink = fs.readlinkSync
+var equal = require('fs-equals/assert')
+var log = require('../src/logger')
+var app = require('express')()
+var chai = require('./chai')
+var install = require('..')
+var path = require('path')
+var zlib = require('zlib')
+var fs = require('fs')
+var exists = fs.existsSync
+var readLink = fs.readlinkSync
+
+app.get('/:package/:version', function(req, res){
+	var pkg = req.params.package
+	var version = req.params.version
+	var dir = path.join(__dirname, 'packages', pkg, version)
+	res.set('content-encoding', 'gzip')
+	spawn('tar', ['c', dir]).stdout
+		.pipe(zlib.createGzip())
+		.pipe(res)
+})
+
+app.listen(3000)
 
 // log.enable('debug')
 
