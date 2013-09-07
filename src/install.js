@@ -1,7 +1,7 @@
 
 var apply = require('lift-result/apply')
 var download = require('./download')
-var each = require('foreach/series')
+var each = require('foreach/async')
 var getDeps = require('./get-deps')
 var fs = require('lift-result/fs')
 var log = require('./logger')
@@ -16,7 +16,7 @@ install.mkdir = mkdir
 
 /**
  * install all dependecies of `dir`
- * 
+ *
  * @param {String} dir
  * @param {Object} opts
  * @return {Promise}
@@ -34,7 +34,7 @@ function install(dir, opts){
 
 /**
  * ensure `url` is registered as installed
- * 
+ *
  * @param {Object} log
  * @param {String} url
  */
@@ -53,7 +53,7 @@ function addInstalled(log, url){
 
 /**
  * link to a package. will install it if necessary
- * 
+ *
  * @param {String} url
  * @param {String} name
  * @param {Object} opts
@@ -72,7 +72,7 @@ function linkPackage(url, from, opts){
 
 /**
  * ensure a symlink exists
- * 
+ *
  * @param {String} from
  * @param {String} to
  * @return {Promise}
@@ -99,7 +99,7 @@ function link(from, to){
 
 /**
  * ensure a package is properly installed
- * 
+ *
  * @param {String} url
  * @param {String} dest
  * @param {Object} opts
