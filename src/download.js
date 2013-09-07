@@ -1,10 +1,10 @@
 
 var exec = require('child_process').exec
-	, defer = require('result/defer')
-	, get = require('./http-get')
-	, log = require('./logger')
-	, untar = require('untar')
-	, zlib = require('zlib')
+var defer = require('result/defer')
+var get = require('./http-get')
+var log = require('./logger')
+var untar = require('untar')
+var zlib = require('zlib')
 
 /**
  * download a repo to a directory

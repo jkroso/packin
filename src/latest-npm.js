@@ -1,9 +1,9 @@
 
 var parseJSON = require('JSONStream').parse
-  , concat = require('concat-stream')
-  , defer = require('result/defer')
-  , get = require('./http-get')
-  , semver = require('semver')
+var concat = require('concat-stream')
+var defer = require('result/defer')
+var get = require('./http-get')
+var semver = require('semver')
 
 exports.tag = latestTag
 

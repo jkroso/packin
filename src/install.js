@@ -1,12 +1,12 @@
 
+var apply = require('lift-result/apply')
 var download = require('./download')
-  , each = require('foreach/series')
-  , getDeps = require('./get-deps')
-  , apply = require('when/apply')
-  , fs = require('resultify/fs')
-  , log = require('./logger')
-  , path = require('path')
-  , join = path.join
+var each = require('foreach/series')
+var getDeps = require('./get-deps')
+var fs = require('lift-result/fs')
+var log = require('./logger')
+var path = require('path')
+var join = path.join
 
 var cache = process.env.HOME + '/.packin/-'
 

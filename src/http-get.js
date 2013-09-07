@@ -1,6 +1,6 @@
 
 var parseURL = require('url').parse
-	, Result = require('result')
+var Result = require('result')
 
 var types = {
 	'http:': require('http').request,

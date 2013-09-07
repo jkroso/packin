@@ -1,14 +1,14 @@
 
 var latestNPM = require('./latest-npm').url
-  , reduce = require('reduce/series')
-  , filter = require('filter/async')
-  , lift = require('when-all/deep')
-  , decorate = require('when/lift')
-  , fs = require('resultify/fs')
-  , join = require('path').join
-  , semver = require('semver')
-  , log = require('./logger')
-  , map = require('map')
+var whenAll = require('when-all/deep')
+var reduce = require('reduce/series')
+var filter = require('filter/async')
+var fs = require('lift-result/fs')
+var lift = require('lift-result')
+var join = require('path').join
+var semver = require('semver')
+var log = require('./logger')
+var map = require('map')
 
 module.exports = deps
 
@@ -30,11 +30,11 @@ function deps(dir, opts){
 			json = normalize[file](json, opts)
 			return combineDeps(deps, json, opts)
 		}, {})
-		return lift(deps)
+		return whenAll(deps)
 	})
 }
 
-var combineDeps = decorate(function(deps, json, opts){
+var combineDeps = lift(function(deps, json, opts){
 	if (opts.development) merge(json.development)
 	if (opts.production) merge(json.production)
 	function merge(json){
@@ -68,7 +68,7 @@ var normalize = map({
 			development: normalizeNpm(json.devDependencies)
 		}
 	}
-}, decorate)
+}, lift)
 
 function normalizeComponent(deps){
 	if (!deps) return
