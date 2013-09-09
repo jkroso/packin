@@ -82,19 +82,32 @@ function link(from, to){
 	return fs.readlink(from).then(function(path){
 		if (path != to) {
 			log.debug('correcting symlink %p', from)
-			return fs.unlink(from).then(function(){
-				return fs.symlink(to, from)
-			})
+			fs.unlinkSync(from)
+			fs.symlinkSync(to, from)
 		}
 	}, function(e){
 		switch (e.code) {
-			case 'ENOENT': return fs.symlink(to, from)
+			case 'ENOENT':
+				return fs.symlink(to, from).then(null, function(e){
+					if (e.code != 'EEXIST') error(e) // race condition
+				})
 			case 'EINVAL':
 				log.info('warning', 'not linking %p since its a hard file', from)
 				break
-			throw new Error(e.message)
+			default: error(e)
 		}
 	})
+}
+
+/**
+ * rethrow `e` with a better stack trace
+ *
+ * @param {Error} e
+ * @api private
+ */
+
+function error(e){
+	throw new Error(e.stack)
 }
 
 /**
@@ -109,17 +122,16 @@ function link(from, to){
 function ensureExists(url, dest, opts){
 	var uri = url.replace(/\w+:\/\//, '')
 	if (uri in seen) return seen[uri]
-	return seen[uri] = fs.exists(dest)
-		.then(function(yes){
-			if (opts.log[url].isNew = !yes) {
-				return download(url, dest).then(function(){
-					log.info('installed', uri)
-					return install(dest, opts)
-				})
-			}
-			log.info('exists', uri)
-			if (opts.retrace) return install(dest, opts)
-		})
+	return seen[uri] = fs.exists(dest).then(function(yes){
+		if (opts.log[url].isNew = !yes) {
+			return download(url, dest).then(function(){
+				log.info('installed', uri)
+				return install(dest, opts)
+			})
+		}
+		log.info('exists', uri)
+		if (opts.retrace) return install(dest, opts)
+	})
 }
 
 var seen = Object.create(null)
