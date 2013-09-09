@@ -49,5 +49,10 @@
   "license": "MIT",
   "bin": {
     "packin": "bin/packin"
-  }
+  },
+  "files": [
+    "src",
+    "bin",
+    "index.js"
+  ]
 }
