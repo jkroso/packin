@@ -108,8 +108,12 @@ function npmUrl(name, version){
 	if (/^(\w+\/[\w\-]+)(?:@(\d+\.\d+\.\d+))?/.test(version)) {
 		return 'http://github.com/'+RegExp.$1+'/tarball/'+(RegExp.$2 || 'master')
 	}
+
+	// check valid
 	if (/\//.test(name)) throw new Error('invalid package ' + name)
-	// semver magic
+	if (!semver.validRange(version)) throw new Error('invalid semver')
+
+	// resolve semver
 	return latestNPM(name, version)
 }
 
