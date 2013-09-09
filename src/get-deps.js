@@ -3,6 +3,7 @@ var latestNPM = require('./latest-npm').url
 var whenAll = require('when-all/deep')
 var reduce = require('reduce/series')
 var filter = require('filter/async')
+var defer = require('result/defer')
 var fs = require('lift-result/fs')
 var lift = require('lift-result')
 var join = require('path').join
@@ -113,8 +114,10 @@ function npmUrl(name, version){
 	if (/\//.test(name)) throw new Error('invalid package ' + name)
 	if (!semver.validRange(version)) throw new Error('invalid semver')
 
-	// resolve semver
-	return latestNPM(name, version)
+	// resolve semver lazily
+	return defer(function(){
+		return latestNPM(name, version)
+	})
 }
 
 function readJSON(file){
