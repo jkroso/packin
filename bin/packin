@@ -1,24 +1,24 @@
 #!/usr/bin/env node
 
+var latestNPM = require('../src/latest-npm')
 var getDeps = require('../src/get-deps')
-	, sliceFile = require('read-slice')
-	, resultify = require('resultify')
-	, ghtag = resultify(require('github-latest'))
-	, latestNPM = require('../src/latest-npm')
-	, writeFile = require('writefile')
-	, each = require('foreach/async')
-	, eachfile = require('dir-each')
-	, log = require('../src/logger')
-	, program = require('commander')
-	, apply = require('when/apply')
-	, rmdir = require('rmdir/sync')
-	, fs = require('resultify/fs')
-	, Result = require('result')
-	, map = require('map/async')
-	, all = require('when-all')
-	, install = require('..')
-	, path = require('path')
-	, format = log.format
+var sliceFile = require('read-slice')
+var lift = require('lift-result/cps')
+var ghtag = lift(require('github-latest'))
+var apply = require('lift-result/apply')
+var writeFile = require('writefile')
+var each = require('foreach/async')
+var eachfile = require('dir-each')
+var log = require('../src/logger')
+var program = require('commander')
+var fs = require('lift-result/fs')
+var rmdir = require('rmdir/sync')
+var Result = require('result')
+var map = require('map/async')
+var all = require('when-all')
+var install = require('..')
+var path = require('path')
+var format = log.format
 
 // enable basic info
 
