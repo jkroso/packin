@@ -12,10 +12,10 @@ var eachfile = require('dir-each')
 var log = require('../src/logger')
 var program = require('commander')
 var fs = require('lift-result/fs')
-var rmdir = require('rmdir/sync')
 var Result = require('result')
 var map = require('map/async')
 var all = require('when-all')
+var rm = require('rm-r/sync')
 var install = require('..')
 var path = require('path')
 var format = log.format
@@ -353,9 +353,9 @@ program
 
 		process.on('exit', cleanup)
 		function cleanup(code, sig){
-			console.log('  exited with code:%s', code)
+			console.log('  Exited early with code:%s', code)
 			each(opts.log, function(dep){
-				if (dep.isNew) rmdir(dep.location)
+				if (dep.isNew) rm(dep.location)
 			})
 		}
 

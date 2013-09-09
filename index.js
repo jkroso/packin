@@ -5,8 +5,8 @@ var install = require('./src/install')
 var each = require('foreach/series')
 var fs = require('lift-result/fs')
 var log = require('./src/logger')
-var rmdir = require('rmdir/sync')
 var join = require('path').join
+var rm = require('rm-r/sync')
 var mkdir = install.mkdir
 
 /**
@@ -56,7 +56,7 @@ function cleanup(options){
 		each(options.log, function(dep, p){
 			if (dep.isNew && fs.existsSync(dep.location)) {
 				log.warn('removing', '%p', dep.location)
-				rmdir(dep.location)
+				rm(dep.location)
 			}
 		})
 		throw e
