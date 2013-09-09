@@ -151,7 +151,7 @@ program
 	.description('expand shorthand to a full url')
 	.action(function(short){
 		parseKeyValue(short).read(function(url){
-			log.info(url[0], url[1])
+			console.log('"%s": "%s"', url[0], url[1])
 		})
 	})
 
@@ -172,7 +172,6 @@ function parseKeyValue(kv){
 		var tag = RegExp.$3
 		if (!key) key = repo
 		if (tag) return Result.wrap([key, url + tag])
-		log.info('fetching', 'latest tag for %s/%s', user, repo)
 		return ghtag(user, repo)
 			.then(null, function(e){
 				log.info('error', '%s. cant find latest tag for %s', e && e.message, repo)
