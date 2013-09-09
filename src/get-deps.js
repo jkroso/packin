@@ -47,7 +47,7 @@ var combineDeps = lift(function(deps, json, opts){
 
 /**
  * JSON normalizers
- * 
+ *
  * @param {Object} json
  * @return {Object}
  */
@@ -82,9 +82,9 @@ function normalizeComponent(deps){
 
 function componentUrl(name, version){
 	if (version == '*') version = 'master'
-	return 'http://github.com/'+name+'/tarball/'+version 
+	return 'http://github.com/'+name+'/tarball/'+version
 	// for some reason this 404s with hyperquest but not curl(1)
-	// return 'https://api.github.com/repos/'+name+'/tarball/'+version 
+	// return 'https://api.github.com/repos/'+name+'/tarball/'+version
 }
 
 function normalizeNpm(deps){

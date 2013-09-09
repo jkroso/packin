@@ -1,18 +1,17 @@
 
+var apply = require('lift-result/apply')
+var getDeps = require('./src/get-deps')
 var install = require('./src/install')
-  , getDeps = require('./src/get-deps')
-  , each = require('foreach/series')
-  , resultify = require('resultify')
-  , apply = require('when/apply')
-  , log = require('./src/logger')
-  , fs = require('resultify/fs')
-  , join = require('path').join
-  , rmdir = require('rmdir/sync')
-  , mkdir = install.mkdir
+var each = require('foreach/series')
+var fs = require('lift-result/fs')
+var log = require('./src/logger')
+var rmdir = require('rmdir/sync')
+var join = require('path').join
+var mkdir = install.mkdir
 
 /**
  * install all dependecies of `dir`
- * 
+ *
  * @param {String} dir
  * @param {Object} [opts]
  * @return {Promise} log
@@ -46,7 +45,7 @@ module.exports = function(dir, opts){
  * generate a cleanup handler which removes all
  * new downloads leaving the cache in the same
  * state it started
- * 
+ *
  * @param {Object} options
  * @return {Function}
  */
@@ -66,7 +65,7 @@ function cleanup(options){
 
 /**
  * install `url` to `dir`
- * 
+ *
  * @param {String} url
  * @param {String} dir
  * @param {Object} [opts]
@@ -84,7 +83,7 @@ var defaultFiles = ['deps.json', 'component.json', 'package.json']
 
 /**
  * hydrate `opts` with default values
- * 
+ *
  * @param {Object} opts
  * @api private
  */
