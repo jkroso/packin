@@ -190,7 +190,7 @@ describe('custom install folders', function(){
 			})
 		}).node(done)
 	})
-	
+
 	it('should be able to install packages for node', function(done){
 		install(__dirname+'/simple', {folder: 'node_modules'}).then(function(){
 			var simple = require('./simple')
@@ -231,7 +231,7 @@ describe('package.json', function(){
 			files: ['package.json'],
 			folder: 'node_modules',
 			production: true
-		}).then(function(){
+		}).read(function(){
 			exists(dir+'/node_modules/sliced').should.be.true
 			require(dir).should.be.a('function')
 			exec('node '+__dirname+'/npm/examples/basic', function(e, out, err){
@@ -303,9 +303,9 @@ describe('npm errors', function(){
 		})
 
 		it('should error', function(done){
-			install(dir, opts).then(null, function(e){
+			install(dir, opts).read(null, function(e){
 				e.should.be.an.instanceOf(Error)
-				e.message.should.include('not in npm')
+				e.message.should.include('Not Found')
 				done()
 			})
 		})
@@ -317,7 +317,7 @@ describe('npm errors', function(){
 		})
 
 		it('should error', function(done){
-			install(dir, opts).then(null, function(e){
+			install(dir, opts).read(null, function(e){
 				e.should.be.an.instanceOf(Error)
 				done()
 			})
