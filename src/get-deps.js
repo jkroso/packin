@@ -26,25 +26,37 @@ function deps(dir, opts){
 	}).then(function(files){
 		if (!files.length) throw new Error('no meta file detected for '+dir)
 		log.debug('%p uses %j for meta data', dir, files)
+
 		var deps = reduce(files, function(deps, file){
+			var fn = normalize[file]
 			var json = readJSON(join(dir, file))
-			json = normalize[file](json, opts)
-			return combineDeps(deps, json, opts)
+			var json = fn(json, opts)
+			return merge(deps, json, opts)
 		}, {})
 		return whenAll(deps)
 	})
 }
 
-var combineDeps = lift(function(deps, json, opts){
-	if (opts.development) merge(json.development)
-	if (opts.production) merge(json.production)
-	function merge(json){
-		if (json) for (var key in json) {
-			if (!(key in deps)) deps[key] = json[key]
-		}
-	}
+/**
+ * merge the keys from json which are already on `deps`
+ *
+ * @param {Object} deps
+ * @param {Object} json
+ * @param {Object} options
+ * @api private
+ */
+
+var merge = lift(function(deps, json, opts){
+	opts.development && softMerge(deps, json.development)
+	opts.production  && softMerge(deps, json.production)
 	return deps
 })
+
+function softMerge(a, b){
+	for (var k in b) {
+		if (!(k in a)) a[k] = b[k]
+	}
+}
 
 /**
  * JSON normalizers
@@ -71,21 +83,27 @@ var normalize = map({
 	}
 }, lift)
 
+/**
+ * convert component.json format to the more explicit
+ * deps.json format.
+ *
+ *   "jkroso/emitter": "1.0.0" -> "emitter": "url..."
+ *
+ * @param {Object} deps
+ * @return {Object}
+ * @api private
+ */
+
 function normalizeComponent(deps){
 	if (!deps) return
 	var res = {}
 	for (var name in deps) {
-		var short = name.split('/')[1]
-		res[short] = componentUrl(name, deps[name]);
+		var repo = name.split('/')[1]
+		var tag = deps[name]
+		if (tag == '*') tag = 'master'
+		res[repo] = 'http://github.com/' + name + '/tarball/' + tag
 	}
 	return res
-}
-
-function componentUrl(name, version){
-	if (version == '*') version = 'master'
-	return 'http://github.com/'+name+'/tarball/'+version
-	// for some reason this 404s with hyperquest but not curl(1)
-	// return 'https://api.github.com/repos/'+name+'/tarball/'+version
 }
 
 function normalizeNpm(deps){
