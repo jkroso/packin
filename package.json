@@ -1,6 +1,6 @@
 {
   "name": "packin",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "description": "a simple package manager",
   "dependencies": {
     "github-latest": "http://github.com/jkroso/github-latest/tarball/0.3.0",
@@ -18,7 +18,7 @@
     "solicit": "0.0.1",
     "semver": "2.1.0",
     "result": "0.4.2",
-    "untar": "0.2.4",
+    "untar": "0.2.5",
     "rm-r": "1.0.0"
   },
   "devDependencies": {
