@@ -128,9 +128,10 @@ function npmUrl(name, version){
 		return 'http://github.com/'+RegExp.$1+'/tarball/'+(RegExp.$2 || 'master')
 	}
 
-	// check valid
-	if (/\//.test(name)) throw new Error('invalid package ' + name)
-	if (!semver.validRange(version)) throw new Error('invalid semver')
+	// validate name
+	if (/\//.test(name)) {
+		throw new Error('invalid package name ' + name)
+	}
 
 	// resolve semver lazily
 	return defer(function(){

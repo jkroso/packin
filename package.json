@@ -1,6 +1,6 @@
 {
   "name": "packin",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "description": "a simple package manager",
   "dependencies": {
     "github-latest": "http://github.com/jkroso/github-latest/tarball/0.3.0",
@@ -24,8 +24,8 @@
   "devDependencies": {
     "fs-equals": "0.2.5",
     "express": "3.3.3",
-    "mocha": "1.12.1",
-    "chai": "1.7.2"
+    "mocha": "1.13.0",
+    "chai": "1.8.0"
   },
   "scripts": {
     "install": "bin/on-install.sh"
