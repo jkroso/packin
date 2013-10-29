@@ -1,14 +1,16 @@
 
-var latestNPM = require('./latest-npm').url
 var whenAll = require('when-all/deep')
 var reduce = require('reduce/series')
 var filter = require('filter/async')
+var github = require('./github').url
 var defer = require('result/defer')
 var fs = require('lift-result/fs')
 var lift = require('lift-result')
 var join = require('path').join
+var npm = require('./npm').url
 var semver = require('semver')
 var log = require('./logger')
+var each = require('foreach')
 var map = require('map')
 
 module.exports = deps
@@ -87,7 +89,7 @@ var normalize = map({
  * convert component.json format to the more explicit
  * deps.json format.
  *
- *   "jkroso/emitter": "1.0.0" -> "emitter": "url..."
+ *   "jkroso/emitter": "1.0.0" -> "emitter": "http://..."
  *
  * @param {Object} deps
  * @return {Object}
@@ -95,14 +97,16 @@ var normalize = map({
  */
 
 function normalizeComponent(deps){
-	if (!deps) return
+	if (!deps) return null
 	var res = {}
-	for (var name in deps) {
-		var repo = name.split('/')[1]
-		var tag = deps[name]
-		if (tag == '*') tag = 'master'
-		res[repo] = 'http://github.com/' + name + '/tarball/' + tag
-	}
+	each(deps, function(tag, name){
+		var parts = name.split('/')
+		var user = parts[0]
+		var repo = parts[1]
+		res[repo] = tag == '*'
+			? defer(function(){ return github(user, repo) })
+			: 'http://github.com/' + name + '/tarball/' + tag
+	})
 	return res
 }
 
@@ -135,7 +139,7 @@ function npmUrl(name, version){
 
 	// resolve semver lazily
 	return defer(function(){
-		return latestNPM(name, version)
+		return npm(name, version)
 	})
 }
 

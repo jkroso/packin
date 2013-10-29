@@ -1,17 +1,16 @@
 #!/usr/bin/env node
 
-var latestNPM = require('../src/latest-npm')
 var getDeps = require('../src/get-deps')
-var sliceFile = require('read-slice')
-var lift = require('lift-result/cps')
-var ghtag = lift(require('github-latest'))
 var apply = require('lift-result/apply')
+var sliceFile = require('read-slice')
+var github = require('../src/github')
 var writeFile = require('writefile')
 var each = require('foreach/async')
 var eachfile = require('dir-each')
 var log = require('../src/logger')
 var program = require('commander')
 var fs = require('lift-result/fs')
+var npm = require('../src/npm')
 var Result = require('result')
 var map = require('map/async')
 var all = require('when-all')
@@ -96,8 +95,7 @@ program
 				var oldtag = RegExp.$3
 				clearLine()
 				writePending(++pending)
-				return ghtag(user, repo).then(function(tag){
-					if (tag == null) tag = 'master'
+				return github.tag(user, repo).then(function(tag){
 					var id = user + '/' + repo
 					logUpdate(id, oldtag, tag)
 					return 'http://github.com/' + id + '/tarball/' + tag
@@ -108,7 +106,7 @@ program
 				var tag = RegExp.$2
 				clearLine()
 				writePending(++pending)
-				return latestNPM.tag(id, '>=' + tag).then(function(latest){
+				return npm.tag(id, '>=' + tag).then(function(latest){
 					logUpdate(id, tag, latest)
 					return 'http://registry.npmjs.org/'+id+'/-/'+id+'-'+latest+'.tgz'
 				})
@@ -162,8 +160,8 @@ function parseKeyValue(kv){
 		var tag = RegExp.$3
 		if (!key) key = repo
 		if (tag) return Result.wrap([key, url + tag])
-		return ghtag(user, repo).then(function(tag){
-			return [key, url + (tag || 'master')]
+		return github.tag(user, repo).then(function(tag){
+			return [key, url + tag]
 		})
 	}
 
@@ -171,7 +169,7 @@ function parseKeyValue(kv){
 	if (/^(.+)(?:@(.*))?$/.exec(value)) {
 		var pkg = RegExp.$1
 		var version = RegExp.$2 || '*'
-		return latestNPM.url(pkg, version).then(function(url){
+		return npm.url(pkg, version).then(function(url){
 			return [pkg, url]
 		})
 	}
@@ -508,10 +506,7 @@ program
 	.action(function(pkg, opts){
 		// deregister this package
 		if (opts.name || !pkg) return unregister(cwd, opts.name)
-		
-		fs.unlink(cwd + '/' + opts.folder + '/' + pkg, function(){
-			// ignore errors
-		})
+		fs.unlink(cwd + '/' + opts.folder + '/' + pkg) // ignore errors
 	})
 
 program.parse(process.argv)
