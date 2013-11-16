@@ -7,6 +7,8 @@ var log = require('./logger')
 var untar = require('untar')
 var zlib = require('zlib')
 
+module.exports = download
+
 /**
  * download a repo to a directory
  *
@@ -15,26 +17,29 @@ var zlib = require('zlib')
  * @return {Promise} nil
  */
 
-module.exports = function(url, dir){
+function download(url, dir){
 	var protocol = url.match(/^(\w+):\/\//)[1]
 	log.info('fetching', url)
 	if (protocol in handlers) return handlers[protocol](url, dir)
-	throw new Error('unsupported protocol '+protocol)
+	throw new TypeError('unsupported protocol ' + protocol)
 }
 
-var handlers = Object.create(null)
+var handlers = {
+	https: http,
+	http: http,
+	git: git
+}
 
 /**
  * fetch a tar file and unpack to `dir`
  *
  * @param {String} url
  * @param {String} dir
- * @return {Result}
+ * @return {Promise}
  * @api private
  */
 
-handlers.https =
-handlers.http = function(url, dir){
+function http(url, dir){
 	return untar(dir, inflate(get(url).response, url))
 }
 
@@ -42,7 +47,7 @@ handlers.http = function(url, dir){
  * some servers don't tell you their encodings properly
  *
  * @param {IncomingMessage} res
- * @return {Stream}
+ * @return {Promise<Stream>}
  * @api private
  */
 
@@ -66,17 +71,18 @@ var inflate = lift(function(res, url){
  * @api private
  */
 
-handlers.git = function(url, dir){ return defer(function(write, error){
+ function git(url, dir){ return defer(function(){
 	var cmd = 'git clone --depth 1 '
 	var m = /#([^\/]+)$/.exec(url)
+	var self = this
 	if (m) {
 		cmd += url.slice(0, m.index) + ' ' + dir + ' --branch ' + m[1]
 	} else {
 		cmd	+= url + ' ' + dir
 	}
 	log.warn('exec', '%s', cmd)
-	exec(cmd, function(e, so, se){
-		if (e) error(new Error(e.message))
-		else write()
+	exec(cmd, function(e){
+		if (e) self.error(new Error(e.message))
+		else self.write()
 	})
 })}
