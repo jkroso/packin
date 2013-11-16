@@ -35,7 +35,7 @@ var handlers = Object.create(null)
 
 handlers.https =
 handlers.http = function(url, dir){
-	return untar(dir, inflate(get(url).response(), url))
+	return untar(dir, inflate(get(url).response, url))
 }
 
 /**
