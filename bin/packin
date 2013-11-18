@@ -139,7 +139,7 @@ program
 	.description('expand shorthand to a full url')
 	.action(function(short){
 		parseKeyValue(short).read(function(url){
-			console.log('"%s": "%s"', url[0], url[1])
+			console.log(url[1])
 		})
 	})
 
