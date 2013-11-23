@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "description": "find the first item within an array that passes a predicate test. (async, sync, or series)",
   "dependencies": {
-    "laissez-faire": "jkroso/laissez-faire@0.12.2",
-    "when": "https://github.com/jkroso/when/tarball/1.0.0",
+    "readable-stream": "git://github.com/Raynos/readable-stream#read-stream",
+    "lift-result": "https://github.com/jkroso/lift-result/tarball/0.1.3",
     "find": "git://github.com/component/find",
-    "readable-stream": "git://github.com/Raynos/readable-stream#read-stream"
+    "laissez-faire": "jkroso/result#0.4.4"
   },
   "repository": {
     "type": "git",

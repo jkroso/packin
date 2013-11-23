@@ -280,11 +280,11 @@ describe('modern-npm', function(){
 			folder: 'node_modules',
 			production: true
 		}).then(function(){
-			exists(dir+'/node_modules/when').should.be.true
-			exists(dir+'/node_modules/laissez-faire').should.be.true
+			require(dir+'/node_modules/lift-result/package').should.have.property('version', '0.1.3')
+			require(dir+'/node_modules/laissez-faire/package').should.have.ownProperty('version', "0.4.4")
 			exists(dir+'/node_modules/find').should.be.true
 			exists(dir+'/node_modules/readable-stream').should.be.true
-			require(dir+'/async').should.be.a('function')
+			require(dir+'/series').should.be.a('function')
 		}).node(done)
 	})
 })

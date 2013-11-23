@@ -128,7 +128,7 @@ function npmUrl(name, version){
 		return version
 	}
 	// github shorthand
-	if (/^(\w+\/[\w\-]+)(?:@(\d+\.\d+\.\d+))?/.test(version)) {
+	if (/^(\w+\/[\w\-]+)(?:#(\d+\.\d+\.\d+))?/.test(version)) {
 		return 'http://github.com/'+RegExp.$1+'/tarball/'+(RegExp.$2 || 'master')
 	}
 
