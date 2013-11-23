@@ -3,7 +3,7 @@ var spawn = require('child_process').spawn
 var exec = require('child_process').exec
 var equal = require('fs-equals/assert')
 var log = require('../src/logger')
-var app = require('express')()
+var express = require('express')
 var chai = require('./chai')
 var install = require('..')
 var path = require('path')
@@ -11,6 +11,10 @@ var zlib = require('zlib')
 var fs = require('fs')
 var exists = fs.existsSync
 var readLink = fs.readlinkSync
+
+var app = express()
+
+// app.use(express.logger('dev'))
 
 app.get('/:package/:version', function(req, res){
 	var pkg = req.params.package

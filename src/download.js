@@ -40,7 +40,11 @@ var handlers = {
  */
 
 function http(url, dir){
-	return untar(dir, inflate(get(url).response, url))
+	var res = get(url).response.then(function(res){
+		if (res.statusType <3) return res
+		throw new Error('request failed ' + url)
+	})
+	return untar(dir, inflate(res, url))
 }
 
 /**
