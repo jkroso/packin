@@ -129,7 +129,11 @@ function npmUrl(name, version){
 	}
 	// github shorthand
 	if (/^(\w+\/[\w\-]+)(?:#(\d+\.\d+\.\d+))?/.test(version)) {
-		return 'http://github.com/'+RegExp.$1+'/tarball/'+(RegExp.$2 || 'master')
+		var version = RegExp.$2
+		var name = RegExp.$1
+		return version
+			? 'http://github.com/' + name + '/tarball/' + version
+			: defer(function(){ return github.apply(null, name.split('/')) })
 	}
 
 	// validate name
