@@ -151,6 +151,12 @@ function parseKeyValue(kv){
 		var value = RegExp.$1
 	}
 
+	// local package
+	if (/^\.|^\//.exec(value)) {
+		value = path.resolve(value)
+		return Result.wrap([key || path.basename(value), value])
+	}
+
 	// github shorthand
 	if (/^([-.\w]+)\/([-.\w]+)(?:@(.*))?$/.exec(value)) {
 		var url = 'http://github.com/'+RegExp.$1+'/'+RegExp.$2+'/tarball/'
@@ -173,13 +179,6 @@ function parseKeyValue(kv){
 		})
 	}
 }
-
-/**
- * get the deps.json file's data
- *
- * @param {String} [file=./deps.json]
- * @return {Object}
- */
 
 function getJSON(file){
 	file || (file = cwd + '/deps.json')
