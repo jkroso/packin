@@ -61,6 +61,9 @@ function addInstalled(log, url){
  */
 
 function linkPackage(url, from, opts){
+	// local path
+	if (/^\/[^\/]/.test(url)) return link(from, url)
+	// remote path
 	var pkg = join(cache, url.replace(/^\w+:\/\//, ''))
 	var dep = addInstalled(opts.log, url)
 	dep.location = pkg

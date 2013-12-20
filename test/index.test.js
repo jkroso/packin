@@ -123,6 +123,16 @@ describe('install', function(){
 			rmdir(dir+'/deps', done)
 		})
 	})
+
+	it('should link local packages', function(done){
+		var dir = __dirname + '/local-packages'
+		install(dir).read(function(log){
+			var files = fs.readdirSync(dir + '/deps')
+			files.should.include('equals')
+			files.should.include('type')
+			files.should.include('local')
+		}).node(done)
+	})
 })
 
 describe('cleanup', function(){
