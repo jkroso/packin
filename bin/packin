@@ -217,7 +217,7 @@ function add(key, url, opts){
 
 program
 	.command('ls')
-	.description('display this packages dependencies')
+	.description('show dependencies')
 	.option('-f, --folder <dir>', 'dependency directory', defaults.folder)
 	.action(function(opts){
 		var dev = getDeps(cwd, {
@@ -245,31 +245,7 @@ program
 					if (/registry\.npmjs\.org\/[^\/]+\/-\/(.*)-(.*)\.tgz/.test(url)) {
 						url = RegExp.$1 + '@' + RegExp.$2
 					}
-					print(format('    %s %s', blue(key), url))
-				})
-				print('')
-			}
-
-			var dir = cwd + '/' + opts.folder
-			if (!fs.existsSync(dir)) return
-			var links = fs.readdirSync(dir).filter(function(name){
-				var file = path.join(dir, name)
-				if (!fs.lstatSync(file).isSymbolicLink()) return false
-				var link = fs.readlinkSync(file)
-				if (production[name] && linked(link, production[name])) return false
-				if (development[name] && linked(link, development[name])) return false
-				return true
-			})
-
-			function linked(link, url){
-				return link.indexOf(url.replace(/\w+:\/\//, '')) > 0
-			}
-
-			if (links.length) {
-				print(blue('  links'))
-				links.forEach(function(file){
-					var pth = path.join(cwd, opts.folder, file)
-					print(format('    %s %p', blue(file), fs.realpathSync(pth)))
+					print(format('    %s %p', blue(key), url))
 				})
 				print('')
 			}
