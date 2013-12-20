@@ -176,7 +176,7 @@ function parseKeyValue(kv){
 
 /**
  * get the deps.json file's data
- * 
+ *
  * @param {String} [file=./deps.json]
  * @return {Object}
  */
@@ -194,7 +194,7 @@ function saveJSON(json, file){
 
 /**
  * add an entry to the deps.json file
- * 
+ *
  * @param {String} key
  * @param {String} url
  * @param {Object} opts
@@ -233,7 +233,7 @@ program
 			print('')
 			show('production', production)
 			show('development', development)
-			
+
 			function show(key, obj){
 				var keys = Object.keys(obj)
 				if (!keys.length) return
@@ -266,11 +266,11 @@ program
 				return link.indexOf(url.replace(/\w+:\/\//, '')) > 0
 			}
 
-			if (links.length) { 
+			if (links.length) {
 				print(blue('  links'))
 				links.forEach(function(file){
 					var pth = path.join(cwd, opts.folder, file)
-					print(format('    %s %p -> %p', blue(file), pth, fs.realpathSync(pth)))
+					print(format('    %s %p', blue(file), fs.realpathSync(pth)))
 				})
 				print('')
 			}
@@ -322,7 +322,7 @@ program
 	})
 	.action(function(options){
 		touch(options.folder)
-		
+
 		var opts = {
 			folder: options.folder,
 			files: options.meta,
@@ -351,7 +351,7 @@ program
 
 /**
  * make executables executable
- * 
+ *
  * @param {String} dir
  * @return {Promise} nil
  */
@@ -380,7 +380,7 @@ function touch(path) {
 }
 
 function mkdir(folder){
-	try { fs.mkdirSync(folder) } 
+	try { fs.mkdirSync(folder) }
 	catch (e) { if (e.code != 'EEXIST') throw e }
 }
 
