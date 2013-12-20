@@ -12,10 +12,6 @@ if [[ ! -d "${PCKHOME}/-" ]]; then
 	mkdir "${PCKHOME}/-"
 fi
 
-if [[ ! -f "${PCKHOME}/links.json" ]]; then
-	echo "{}" > "${PCKHOME}/links.json"
-fi
-
 declare -a json=(
 	'{'
 	'  "folder": "node_modules",'

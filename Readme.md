@@ -8,7 +8,7 @@ Here is a few interesting design decisions:
 + Everything symlinked  
   Symlinks carry semantic value which other tools can leverage. It also means you don't end up copying dependencies all over your file system.
 + Caching  
-  Once a package is installed it never needs to be installed again.
+  Once a package is installed it never needs to be installed again. This makes it super fast and can help you work offline.
 
 ## Installation
 
@@ -50,9 +50,6 @@ The returned log contains a dependency graph of all the install dependencies.
       ls [options]           display this packages dependencies
       rm [options] <key>     remove a package from this packages dependencies
       install [options]      install this packages dependencies
-      links                  list packages available for linking to
-      link [options] [name]  link to a local package or register this one
-      unlink [options] [name] unlink a local package or unregister this one
     
     Options:
     

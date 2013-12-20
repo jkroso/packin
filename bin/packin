@@ -24,7 +24,6 @@ var format = log.format
 log.enable('info')
 
 var home = process.env.HOME+'/.packin'
-var links = home + '/links.json'
 var cwd = process.cwd()
 
 // load default config
@@ -380,134 +379,10 @@ function touch(path) {
 	catch (err) {}
 }
 
-/**
- * register a local package so it can be linked to
- * 
- * @param {String} dir
- * @param {String} [name=basename]
- */
-
-function register(dir, name){
-	if (!name) name = path.basename(dir).toLowerCase()
-	var locals = getLocals()
-	if (name in locals && locals[name] != dir) {
-		log.info('error', '%s currently assigned to %s', name, locals[name]) 
-		return
-	}
-	locals[name] = dir
-	saveLocals(locals)
-	console.log()
-	log.info('linked', '%s -> %s', name, dir)
-	console.log()
-}
-
-/**
- * unregister a package from the linking index
- * 
- * @param {String} dir
- * @param {String} [name=basename]
- */
-
-function unregister(dir, name){
-	if (!name) name = path.basename(cwd).toLowerCase()
-	var locals = getLocals()
-	if (!(name in locals)) {
-		log.info('warning', '%s is not registered', name)
-		return
-	}
-	delete locals[name]
-	saveLocals(locals)
-	console.log()
-	log.info('removed', '%s -> %s', name, dir)
-	console.log()
-}
-
-/**
- * get the links index
- * @return {Object}
- */
-
-function getLocals(){
-	return fs.existsSync(links)
-		? require(links)
-		: {}
-}
-
 function mkdir(folder){
-	try {
-		fs.mkdirSync(folder)
-	} catch (e) {
-		if (e.code != 'EEXIST') throw e
-	}
+	try { fs.mkdirSync(folder) } 
+	catch (e) { if (e.code != 'EEXIST') throw e }
 }
-
-/**
- * save the links index
- * @param {Object} obj
- */
-
-function saveLocals(obj){
-	writeFile(links, JSON.stringify(obj, null, 2))
-}
-
-program
-	.command('links')
-	.description('list packages available for linking to')
-	.action(function(){
-		var locals = getLocals()
-		var keys = Object.keys(locals)
-		if (!keys.length) return print('none to show')
-		print('')
-		keys.forEach(function(key){
-			var path = locals[key]
-			path = path.replace(process.env.HOME, '~')
-			log.info(key, path)
-		})
-		print('')
-	})
-
-program
-	.command('link [name]')
-	.description('link to a local package or register this one')
-	.option('-f, --folder <dir>', 'name of the directory for installed packages', defaults.folder)
-	.option('-n, --name <name>', 'set the name of this package when making it linkable')
-	.on('--help', function(){
-		print('  Examples:')
-		print('')
-		print('    # to make $PWD available as "my-module"')
-		print('    $ packin link -n my-module')
-		print('')
-		print('    # to install "my-module"')
-		print('    $ packin link my-module')
-		print('')
-	})
-	.action(function(pkg, opts){
-		// make linkable
-		if (opts.name || !pkg) return register(cwd, opts.name)
-
-		var locals = getLocals()
-		if (!(pkg in locals)) {
-			log.info('error', '%s is not registered', pkg)
-			return
-		}
-		var deps = cwd + '/' + opts.folder
-		mkdir(deps)
-		var sym = deps+'/'+pkg
-		try { fs.unlinkSync(sym) } catch (e) {}
-		fs.symlinkSync(locals[pkg], sym)
-		log.info('linked', '%p -> %p', sym, locals[pkg])
-	})
-
-program
-	.command('unlink [name]')
-	.description('unlink a local package or unregister this one')
-	.option('-f, --folder <dir>', 'name of the directory for installed packages', defaults.folder)
-	.option('-n, --name <name>', 'set the name of this package when making it linkable')
-	.action(function(pkg, opts){
-		// deregister this package
-		if (opts.name || !pkg) return unregister(cwd, opts.name)
-		fs.unlink(cwd + '/' + opts.folder + '/' + pkg) // ignore errors
-	})
 
 program.parse(process.argv)
 
