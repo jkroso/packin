@@ -27,8 +27,8 @@
   "devDependencies": {
     "fs-equals": "~0.2.6",
     "express": "3.4.4",
-    "mocha": "~1.14.0",
-    "chai": "~1.8.1"
+    "mocha": "*",
+    "chai": "*"
   },
   "scripts": {
     "install": "bin/on-install.sh"
