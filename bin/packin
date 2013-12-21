@@ -292,13 +292,13 @@ program
 		print('    # to use components and npm packages')
 		print('    $ packin install -m component.json,package.json')
 		print('')
+		print('    # install something arbitrary')
+		print('    $ packin install npm')
+		print('')
 	})
-	.action(function(options){
-		if (fs.existsSync(options.folder)) {
-			if (options.clean) rm(options.folder) // rm(1) -r
-			else fs.utimesSync(options.folder, new Date, new Date) // touch(1)
-		}
-
+	.action(function(){
+		var options = arguments[arguments.length - 1]
+		var deps = program.args.slice(0, -1)
 		var opts = {
 			folder: options.folder,
 			files: options.meta,
@@ -306,6 +306,11 @@ program
 			development: options.development,
 			production: options.production,
 			retrace: options.retrace
+		}
+
+		if (fs.existsSync(options.folder)) {
+			if (options.clean) rm(options.folder) // rm(1) -r
+			else fs.utimesSync(options.folder, new Date, new Date) // touch(1)
 		}
 
 		// handle interuption
@@ -316,12 +321,23 @@ program
 			process.exit(1)
 		})
 
-		install(cwd, opts).read(function(log){
-			process.removeListener('exit', cleanup)
-		}, function(e){
-			console.error(e.stack)
+		// install all
+		if (!deps.length) return install(cwd, opts).read(null, onError)
+
+		// install listed deps
+		var folder = path.resolve(options.folder)
+		each(deps, function(dep){
+			return parseKeyValue(dep).then(function(kv){
+				var name = path.join(folder, kv[0])
+				var url = kv[1]
+				return install.one(url, name, opts)
+			})
+		}).read(null, onError)
+
+		function onError(e){
 			cleanup()
-		})
+			throw e
+		}
 
 		function cleanup(){
 			each(opts.log, function(dep){

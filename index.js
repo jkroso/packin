@@ -56,6 +56,9 @@ function wrappedInstall(dir, opts){
 
 wrappedInstall.one = function(url, dir, opts){
 	addDefaults(opts || (opts = {}))
+	if (opts.development == null && opts.production == null) {
+		opts.production = true
+	}
 	return install.one(url, dir, opts).then(function(){
 		return opts.log
 	}, cleanup(opts))
