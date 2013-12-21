@@ -13,15 +13,13 @@
     "map": "jkroso/map#0.2.9",
     "result-type": "1.0.0",
     "lift-result": "~0.1.3",
-    "read-slice": "~0.2.5",
     "writefile": "~0.2.5",
     "commander": "2.1.0",
-    "dir-each": "~0.3.6",
     "when-all": "~0.4.6",
     "solicit": "0.0.4",
     "semver": "~2.2.1",
     "result": "~0.4.4",
-    "untar": "~0.2.6",
+    "untar": "~0.2.7",
     "rm-r": "~1.0.1"
   },
   "devDependencies": {

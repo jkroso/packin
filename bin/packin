@@ -2,11 +2,9 @@
 
 var getDeps = require('../src/get-deps')
 var apply = require('lift-result/apply')
-var sliceFile = require('read-slice')
 var github = require('../src/github')
 var writeFile = require('writefile')
 var each = require('foreach/async')
-var eachfile = require('dir-each')
 var log = require('../src/logger')
 var program = require('commander')
 var fs = require('lift-result/fs')
@@ -283,7 +281,6 @@ program
 	.option('-p, --production', 'install production dependencies')
 	.option('-f, --folder <dir>', 'name of the directory for installed packages', defaults.folder)
 	.option('-m, --meta <files>', 'list of meta files to read', list, defaults.meta)
-	.option('-e, --executables', 'run chmod 755 on all executables')
 	.option('-R, --no-retrace', 'don\'t step into existing dependencies')
 	.on('--help', function () {
 		print('  Examples:')
@@ -307,6 +304,8 @@ program
 			retrace: options.retrace
 		}
 
+		// bind error handling to 'exit' in case
+		// the process is interupted
 		process.on('exit', cleanup)
 		function cleanup(code, sig){
 			console.log('  Exited early with code:%s', code)
@@ -317,30 +316,8 @@ program
 
 		install(cwd, opts).read(function(log){
 			process.removeListener('exit', cleanup)
-			if (!options.executables) return
-			return each(log, function(dep){
-				return chmodExecutables(dep.location)
-			})
 		})
 	})
-
-/**
- * make executables executable
- *
- * @param {String} dir
- * @return {Promise} nil
- */
-
-function chmodExecutables(dir){
-	return eachfile(dir, function(file){
-		return sliceFile(file, 0, 2).then(function(head){
-			if (head == '#!') {
-				log.info('executable', '%p', file)
-				return fs.chmod(file, '755')
-			}
-		})
-	})
-}
 
 /**
  * Touch `path` when present.
