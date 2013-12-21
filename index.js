@@ -9,15 +9,19 @@ var join = require('path').join
 var rm = require('rm-r/sync')
 var mkdir = install.mkdir
 
+module.exports = wrappedInstall
+
 /**
- * install all dependecies of `dir`
+ * wrap `install` to support a nice default `development`
+ * `production` flag configuration, error handling and
+ * to return the log
  *
  * @param {String} dir
  * @param {Object} [opts]
  * @return {Promise} log
  */
 
-module.exports = function(dir, opts){
+function wrappedInstall(dir, opts){
 	if (typeof dir != 'string') opts = dir, dir = opts.target
 	addDefaults(opts || (opts = {}))
 
@@ -42,29 +46,7 @@ module.exports = function(dir, opts){
 }
 
 /**
- * generate a cleanup handler which removes all
- * new downloads leaving the cache in the same
- * state it started
- *
- * @param {Object} options
- * @return {Function}
- */
-
-function cleanup(options){
-	return function(e){
-		log.warn('failed', '%s', e.message)
-		each(options.log, function(dep, p){
-			if (dep.isNew && fs.existsSync(dep.location)) {
-				log.warn('removing', '%p', dep.location)
-				rm(dep.location)
-			}
-		})
-		throw e
-	}
-}
-
-/**
- * install `url` to `dir`
+ * install one package to `dir`
  *
  * @param {String} url
  * @param {String} dir
@@ -72,7 +54,7 @@ function cleanup(options){
  * @return {Promise} log
  */
 
-module.exports.one = function(url, dir, opts){
+wrappedInstall.one = function(url, dir, opts){
 	addDefaults(opts || (opts = {}))
 	return install.one(url, dir, opts).then(function(){
 		return opts.log
@@ -93,4 +75,26 @@ function addDefaults(opts){
 	opts.files || (opts.files = defaultFiles)
 	opts.log || (opts.log = Object.create(null))
 	opts.retrace = opts.retrace !== false
+}
+
+/**
+ * generate a cleanup handler which removes all
+ * new downloads leaving the cache in the same
+ * state it started
+ *
+ * @param {Object} options
+ * @return {Function}
+ */
+
+function cleanup(options){
+	return function(e){
+		log.warn('failed', '%s', e.message)
+		each(options.log, function(dep, p){
+			if (dep.isNew && fs.existsSync(dep.location)) {
+				log.warn('removing', '%p', dep.location)
+				rm(dep.location)
+			}
+		})
+		throw e
+	}
 }
