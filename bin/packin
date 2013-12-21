@@ -282,18 +282,22 @@ program
 	.option('-f, --folder <dir>', 'name of the directory for installed packages', defaults.folder)
 	.option('-m, --meta <files>', 'list of meta files to read', list, defaults.meta)
 	.option('-R, --no-retrace', 'don\'t step into existing dependencies')
+	.option('-c, --clean', 'remove unused dependencies')
 	.on('--help', function () {
 		print('  Examples:')
 		print('')
 		print('    # to emulate npm install')
-		print('    $ packin install -em package.json')
+		print('    $ packin install -m package.json')
 		print('')
 		print('    # to use components and npm packages')
 		print('    $ packin install -m component.json,package.json')
 		print('')
 	})
 	.action(function(options){
-		touch(options.folder)
+		if (fs.existsSync(options.folder)) {
+			if (options.clean) rm(options.folder) // rm(1) -r
+			else fs.utimesSync(options.folder, new Date, new Date) // touch(1)
+		}
 
 		var opts = {
 			folder: options.folder,
@@ -318,23 +322,6 @@ program
 			process.removeListener('exit', cleanup)
 		})
 	})
-
-/**
- * Touch `path` when present.
- *
- * @param {String} path
- * @api private
- */
-
-function touch(path) {
-	try { fs.utimesSync(path, new Date, new Date) }
-	catch (err) {}
-}
-
-function mkdir(folder){
-	try { fs.mkdirSync(folder) }
-	catch (e) { if (e.code != 'EEXIST') throw e }
-}
 
 program.parse(process.argv)
 
