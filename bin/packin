@@ -19,7 +19,7 @@ var format = log.format
 
 // enable basic info
 
-log.enable('info')
+log.enable('error')
 
 var home = process.env.HOME+'/.packin'
 var cwd = process.cwd()
@@ -275,7 +275,7 @@ program
 	})
 
 program
-	.command('install')
+	.command('install [deps]')
 	.description('install this packages dependencies')
 	.option('-d, --development', 'install development dependencies')
 	.option('-p, --production', 'install production dependencies')
@@ -308,19 +308,29 @@ program
 			retrace: options.retrace
 		}
 
-		// bind error handling to 'exit' in case
-		// the process is interupted
-		process.on('exit', cleanup)
-		function cleanup(code, sig){
-			console.log('  Exited early with code:%s', code)
-			each(opts.log, function(dep){
-				if (dep.isNew) rm(dep.location)
-			})
-		}
+		// handle interuption
+		process.on('SIGINT', function(){
+			console.error()
+			console.error('Exiting...')
+			cleanup()
+			process.exit(1)
+		})
 
 		install(cwd, opts).read(function(log){
 			process.removeListener('exit', cleanup)
+		}, function(e){
+			console.error(e.stack)
+			cleanup()
 		})
+
+		function cleanup(){
+			each(opts.log, function(dep){
+				if (dep.isNew && fs.existsSync(dep.location)) {
+					log.warn('removing', '%p', dep.location)
+					rm(dep.location)
+				}
+			})
+		}
 	})
 
 program.parse(process.argv)
