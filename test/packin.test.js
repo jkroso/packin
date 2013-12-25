@@ -2,6 +2,7 @@
 var spawn = require('child_process').spawn
 var exec = require('child_process').exec
 var equal = require('fs-equals/assert')
+var Package = require('../src/package')
 var log = require('../src/logger')
 var express = require('express')
 var chai = require('./chai')
@@ -38,14 +39,6 @@ var filterOpts = {
 	}
 }
 
-afterEach(function(){
-	// install uses an internal cache so it needs to be reloaded
-	// between tests since we are deleting files between runs
-	delete require.cache[require.resolve('..')]
-	delete require.cache[require.resolve('../src/install')]
-	install = require('..')
-})
-
 function rmdir(dir, cb){
 	exec('rm -rf '+dir, cb)
 }
@@ -72,6 +65,7 @@ describe('install', function(){
 
 	it('should install subdependencies', function(done){
 		install(__dirname+'/simple').then(function(){
+			debugger;
 			return equal(
 				__dirname+'/simple/deps/equals/deps/type',
 				__dirname+'/packages/type/master',
@@ -96,31 +90,28 @@ describe('install', function(){
 
 	it('should fix misdirected symlinks', function(done){
 		install(dir).then(function(){
-			fs.unlinkSync(dir+'/deps/equals')
-			fs.symlinkSync('/some/path/that/probably/no/good.coffee', dir+'/deps/equals')
+			fs.unlinkSync(dir + '/deps/equals')
+			fs.symlinkSync('/some/no/good/path.coffee', dir + '/deps/equals')
 			return install(dir).then(function(){
-				fs.readlinkSync(dir+'/deps/equals').should.not.include('no/good.coffe')
+				fs.readlinkSync(dir + '/deps/equals').should.not.include('no/good')
 			})
 		}).node(done)
 	})
 
-	it('should return a list of installed deps', function(done){
-		install(dir).then(function(deps){
-			expect(deps).to.be.an('object')
-				.and.include.keys(
-					'http://localhost:3000/equals/master',
-					'http://localhost:3000/type/master'
-				)
+	it('should return the top level Package', function(done){
+		install(dir).then(function(pkg){
+			pkg.should.be.an.instanceOf(require('../src/package'))
+			pkg.dependencies.value.should.include.keys('equals', 'type')
 		}).node(done)
 	})
 
 	it('should pick the meta data file with the most data', function(done){
 		var dir = __dirname + '/priority'
 		install(dir).read(function(log){
-			exists(dir+'/deps/mocha').should.be.true
-			exists(dir+'/deps/mocha/deps/equals').should.be.true
-			exists(dir+'/deps/mocha/deps/type').should.be.true
-			rmdir(dir+'/deps', done)
+			exists(dir + '/deps/mocha').should.be.true
+			exists(dir + '/deps/mocha/deps/equals').should.be.true
+			exists(dir + '/deps/mocha/deps/type').should.be.true
+			rmdir(dir + '/deps', done)
 		})
 	})
 
@@ -144,15 +135,15 @@ describe('cleanup', function(){
 	})
 	it('should remove all new dependencies', function(done){
 		install(__dirname+'/simple').then(function(logA){
-			exists(lh+'/equals/master').should.be.true
-			exists(lh+'/type/master').should.be.true
-			exists(lh+'/failing/master').should.be.false
+			exists(lh + '/equals/master').should.be.true
+			exists(lh + '/type/master').should.be.true
+			exists(lh + '/failing/master').should.be.false
 			return install(dir).then(null, function(e){
 				expect(e).to.be.an.instanceOf(Error)
-				exists(lh+'/equals/master').should.be.true
-				exists(lh+'/type/master').should.be.true
-				exists(lh+'/fail/master').should.be.false
-				exists(lh+'/failing/master').should.be.false
+				exists(lh + '/equals/master').should.be.true
+				exists(lh + '/type/master').should.be.true
+				exists(lh + '/fail/master').should.be.false
+				exists(lh + '/failing/master').should.be.false
 			})
 		}).node(done)
 	})
@@ -168,8 +159,8 @@ describe('merging', function(){
 		install(dir, {
 			files: ['deps.json', 'package.json']
 		}).then(function(log){
-			exists(dir+'/deps/equals').should.be.true
-			exists(dir+'/deps/type').should.be.true
+			exists(dir + '/deps/equals').should.be.true
+			exists(dir + '/deps/type').should.be.true
 		}).node(done)
 	})
 
@@ -177,9 +168,9 @@ describe('merging', function(){
 		install(dir, {
 			files: ['deps.json', 'package.json']
 		}).then(function(log){
-			exists(dir+'/deps/equals').should.be.true
-			exists(dir+'/deps/type').should.be.true
-			readLink(dir+'/deps/equals').should.not.equal(dir+'/deps/type')
+			exists(dir + '/deps/equals').should.be.true
+			exists(dir + '/deps/type').should.be.true
+			readLink(dir + '/deps/equals').should.not.equal(dir + '/deps/type')
 		}).node(done)
 	})
 })
@@ -190,17 +181,16 @@ describe('custom install folders', function(){
 	})
 
 	it('should work', function(done){
-		install(__dirname+'/simple', {folder: 'node_modules'}).then(function(){
+		install(__dirname + '/simple', {folder: 'node_modules'}).then(function(){
 			return equal(
-				__dirname+'/simple/node_modules/equals',
-				__dirname+'/packages/equals/master',
+				__dirname + '/simple/node_modules/equals',
+				__dirname + '/packages/equals/master',
 				filterOpts
 			).then(function(){
 				return equal(
-					__dirname+'/simple/node_modules/equals/node_modules/type',
-					__dirname+'/packages/type/master',
-					filterOpts
-				)
+					__dirname + '/simple/node_modules/equals/node_modules/type',
+					__dirname + '/packages/type/master',
+					filterOpts)
 			})
 		}).node(done)
 	})
@@ -222,7 +212,7 @@ describe('component.json', function(){
 
 	it('should install subdependencies', function(done){
 		install(dir, {folder: 'node_modules'}).then(function(){
-			exists(dir+'/node_modules/toposort').should.be.true
+			exists(dir + '/node_modules/toposort').should.be.true
 			require(dir).should.be.a('function')
 			exec('node '+__dirname+'/component/examples/basic', function(e, out, err){
 				if (e) return done(e)
@@ -246,7 +236,7 @@ describe('package.json', function(){
 			folder: 'node_modules',
 			production: true
 		}).read(function(){
-			exists(dir+'/node_modules/sliced').should.be.true
+			exists(dir + '/node_modules/sliced').should.be.true
 			require(dir).should.be.a('function')
 			exec('node '+__dirname+'/npm/examples/basic', function(e, out, err){
 				if (e) return done(e)
@@ -261,9 +251,9 @@ describe('package.json', function(){
 			files: ['package.json'],
 			folder: 'node_modules'
 		}).then(function(){
-			exists(dir+'/node_modules/sliced').should.be.true
-			exists(dir+'/node_modules/mocha').should.be.true
-			require(dir+'/node_modules/mocha').should.be.a('function')
+			exists(dir + '/node_modules/sliced').should.be.true
+			exists(dir + '/node_modules/mocha').should.be.true
+			require(dir + '/node_modules/mocha').should.be.a('function')
 		}).node(done)
 	})
 })
@@ -281,7 +271,7 @@ describe('modern-npm', function(){
 	})
 
 	afterEach(function(done){
-		rmdir(dir+'/node_modules', done)
+		rmdir(dir + '/node_modules', done)
 	})
 
 	it('should love it', function(done){
@@ -290,11 +280,11 @@ describe('modern-npm', function(){
 			folder: 'node_modules',
 			production: true
 		}).then(function(){
-			require(dir+'/node_modules/lift-result/package').should.have.property('version', '0.1.3')
-			require(dir+'/node_modules/laissez-faire/package').should.have.ownProperty('version', "0.4.4")
-			exists(dir+'/node_modules/find').should.be.true
-			exists(dir+'/node_modules/readable-stream').should.be.true
-			require(dir+'/series').should.be.a('function')
+			require(dir + '/node_modules/lift-result/package').should.have.property('version', '0.1.3')
+			require(dir + '/node_modules/laissez-faire/package').should.have.property('version', "0.4.4")
+			exists(dir + '/node_modules/find').should.be.true
+			exists(dir + '/node_modules/readable-stream').should.be.true
+			require(dir + '/series').should.be.a('function')
 		}).node(done)
 	})
 })
@@ -307,7 +297,7 @@ describe('npm errors', function(){
 		production: true
 	}
 	afterEach(function(done){
-		rmdir(dir+'/node_modules', done)
+		rmdir(dir + '/node_modules', done)
 	})
 	this.timeout(false)
 
@@ -339,20 +329,19 @@ describe('npm errors', function(){
 	})
 })
 
-describe('install.one(url, dest, opts)', function(){
+describe('install(url, to, opts)', function(){
 	var pkg = 'http://localhost:3000/equals/master'
 	var dir = __dirname + '/equals'
 	afterEach(function(done){
 		exec('rm '+dir, done)
 	})
 
-	it('should install `url` to `dest`', function(done){
-		install.one(pkg, dir).then(function(){
+	it('should install `url` to `to`', function(done){
+		install(pkg, dir, {production: true}).then(function(){
 			return equal(
 				__dirname+'/equals',
 				__dirname+'/packages/equals/master',
-				filterOpts
-			)
+				filterOpts)
 		}).node(done)
 	})
 })
