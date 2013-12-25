@@ -20,15 +20,12 @@ module.exports = download
 function download(url, dir){
 	var protocol = url.match(/^(\w+):\/\//)[1]
 	log.info('fetching', url)
-	if (protocol in handlers) return handlers[protocol](url, dir)
+	if (protocol in download) return download[protocol](url, dir)
 	throw new TypeError('unsupported protocol ' + protocol)
 }
 
-var handlers = {
-	https: http,
-	http: http,
-	git: git
-}
+download.http = download.https = http
+download.git = git
 
 /**
  * fetch a tar file and unpack to `dir`
@@ -75,18 +72,13 @@ var inflate = lift(function(res, url){
  * @api private
  */
 
- function git(url, dir){ return defer(function(){
-	var cmd = 'git clone --depth 1 '
+ function git(url, dir){ return defer(function(cb){
 	var m = /#([^\/]+)$/.exec(url)
-	var self = this
-	if (m) {
-		cmd += url.slice(0, m.index) + ' ' + dir + ' --branch ' + m[1]
-	} else {
-		cmd	+= url + ' ' + dir
-	}
+	var cmd = 'git clone --depth 1 '
+	cmd += m != null
+		? url.slice(0, m.index) + ' ' + dir + ' --branch ' + m[1]
+		: url + ' ' + dir
 	log.warn('exec', '%s', cmd)
-	exec(cmd, function(e){
-		if (e) self.error(new Error(e.message))
-		else self.write()
-	})
+	exec(cmd, cb)
 })}
+ 
