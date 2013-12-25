@@ -26,7 +26,7 @@ Package.cache = Object.create(null)
  * @return {Package}
  */
 
-Package.create = function(url){
+Package.create = lift(function(url){
 	var location = /^\w+:\//.test(url)  // remote?
 		? ns + url.replace(/^\w+:\//, '') // remove protocol
 		: url                             // local filesystem
@@ -38,7 +38,7 @@ Package.create = function(url){
 		pkg.url = url
 	}
 	return pkg
-}
+})
 
 /**
  * default config

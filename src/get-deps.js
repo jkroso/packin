@@ -1,6 +1,5 @@
 
 var reduce = require('reduce/series')
-var clean = require('when-all/deep')
 var github = require('./github').url
 var defer = require('result/defer')
 var fs = require('lift-result/fs')
@@ -25,11 +24,11 @@ module.exports = lift(deps)
  */
 
 function deps(dir, files, p, d){
-	return clean(reduce(files, function(depsA, file){
+	return reduce(files, function(depsA, file){
 		var json = readJSON(join(dir, file))
 		var depsB = normalize[file](json)
 		return merge(depsA, depsB, p, d)
-	}, {}))
+	}, {})
 }
 
 /**
