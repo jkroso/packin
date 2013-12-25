@@ -1,7 +1,6 @@
 
-var whenAll = require('when-all/deep')
 var reduce = require('reduce/series')
-var filter = require('filter/async')
+var clean = require('when-all/deep')
 var github = require('./github').url
 var defer = require('result/defer')
 var fs = require('lift-result/fs')
@@ -13,30 +12,24 @@ var log = require('./logger')
 var each = require('foreach')
 var map = require('map')
 
-module.exports = deps
+module.exports = lift(deps)
 
 /**
  * get a normalized deps.json
  *
- * @param {String} path to the package
+ * @param {String} dir
+ * @param {Array} files
+ * @param {Boolean} production
+ * @param {Boolean} development
  * @return {Result} deps
  */
 
-function deps(dir, opts){
-	return filter(opts.files, function(file){
-		return fs.exists(join(dir, file))
-	}).then(function(files){
-		if (!files.length) throw new Error('no meta file detected for '+dir)
-		log.debug('%p uses %j for meta data', dir, files)
-
-		var deps = reduce(files, function(deps, file){
-			var fn = normalize[file]
-			var json = readJSON(join(dir, file))
-			var json = fn(json, opts)
-			return merge(deps, json, opts)
-		}, {})
-		return whenAll(deps)
-	})
+function deps(dir, files, p, d){
+	return clean(reduce(files, function(depsA, file){
+		var json = readJSON(join(dir, file))
+		var depsB = normalize[file](json)
+		return merge(depsA, depsB, p, d)
+	}, {}))
 }
 
 /**
@@ -48,9 +41,9 @@ function deps(dir, opts){
  * @api private
  */
 
-var merge = lift(function(deps, json, opts){
-	opts.development && softMerge(deps, json.development)
-	opts.production  && softMerge(deps, json.production)
+var merge = lift(function(deps, json, p, d){
+	d && softMerge(deps, json.development)
+	p && softMerge(deps, json.production)
 	return deps
 })
 
@@ -68,16 +61,14 @@ function softMerge(a, b){
  */
 
 var normalize = map({
-	'deps.json': function(json){
-		return json
-	},
-	'component.json': function(json, opts){
+	'deps.json': function(json){ return json },
+	'component.json': function(json){
 		return {
 			production: normalizeComponent(json.dependencies),
 			development: normalizeComponent(json.development)
 		}
 	},
-	'package.json': function(json, opts){
+	'package.json': function(json){
 		return {
 			production: normalizeNpm(json.dependencies),
 			development: normalizeNpm(json.devDependencies)

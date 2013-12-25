@@ -1,103 +1,58 @@
 
-var apply = require('lift-result/apply')
-var getDeps = require('./src/get-deps')
-var install = require('./src/install')
-var each = require('foreach/async')
-var fs = require('lift-result/fs')
+var Package = require('./src/package')
 var log = require('./src/logger')
-var join = require('path').join
+var each = require('foreach')
 var rm = require('rm-r/sync')
-var mkdir = install.mkdir
+var fs = require('fs')
 
-module.exports = wrappedInstall
+module.exports = install
 
 /**
- * wrap `install` to support a nice default `development`
- * `production` flag configuration, error handling and
- * to return the log
+ * wrap internals with a simple function
  *
  * @param {String} dir
  * @param {Object} [opts]
- * @return {Promise} log
+ * @return {Promise<Package>}
  */
 
-function wrappedInstall(dir, opts){
-	if (typeof dir != 'string') opts = dir, dir = opts.target
-	addDefaults(opts || (opts = {}))
+function install(url, to, opts){
+	if (typeof to != 'string') opts = to, to = url
+	if (!opts) opts = {}
 
-	if (opts.development == null && opts.production == null) {
-		opts.development = opts.production = true
-		var folder = dir + '/' + opts.folder
-		var result = apply(getDeps(dir, opts), mkdir(folder), function(deps){
-			// disable after first level
-			opts.development = false
-			log.debug('%p depends on %j', dir, deps)
-			return each(deps, function(url, name){
-				return install.one(url, join(folder, name), opts)
-			})
-		})
-	} else {
-		var result = install(dir, opts)
-	}
+	// configure
+	Package.cache = Object.create(null)
+	Package.prototype.retrace = opts.retrace !== false
+	Package.prototype.folder = opts.folder || 'deps'
+	Package.prototype.possibleFiles = opts.files || defaultFiles
+	Package.prototype.development = opts.development === true
+	Package.prototype.production = opts.production !== false
+	var pkg = Package.create(url)
+	if (pkg.local) pkg.loaded = true
+	pkg.retrace = true // always step into first level
+	pkg.development = opts.development == null && opts.production == null
 
-	return result.then(function(){
-		return opts.log
-	}, cleanup(opts))
+	return pkg.installed.then(function(){
+		if (url != to) return pkg.link(to).then(function(){ return pkg })
+		return pkg
+	}, undo)
 }
 
-/**
- * install one package to `dir`
- *
- * @param {String} url
- * @param {String} dir
- * @param {Object} [opts]
- * @return {Promise} log
- */
-
-wrappedInstall.one = function(url, dir, opts){
-	addDefaults(opts || (opts = {}))
-	if (opts.development == null && opts.production == null) {
-		opts.production = true
-	}
-	return install.one(url, dir, opts).then(function(){
-		return opts.log
-	}, cleanup(opts))
-}
-
-var defaultFiles = ['deps.json', 'component.json', 'package.json']
+var defaultFiles = Package.prototype.possibleFiles
 
 /**
- * hydrate `opts` with default values
+ * undo everything
  *
- * @param {Object} opts
- * @api private
+ * @param {Error} e
+ * @throws {e}
  */
 
-function addDefaults(opts){
-	opts.folder || (opts.folder = 'deps')
-	opts.files || (opts.files = defaultFiles)
-	opts.log || (opts.log = Object.create(null))
-	opts.retrace = opts.retrace !== false
-}
-
-/**
- * generate a cleanup handler which removes all
- * new downloads leaving the cache in the same
- * state it started
- *
- * @param {Object} options
- * @return {Function}
- */
-
-function cleanup(options){
-	return function(e){
-		log.warn('failed', '%s', e.message)
-		each(options.log, function(dep, p){
-			if (dep.isNew && fs.existsSync(dep.location)) {
-				log.warn('removing', '%p', dep.location)
-				rm(dep.location)
-			}
-		})
-		throw e
-	}
+function undo(e){
+	log.warn('failed', '%s', e.message)
+	each(Package.cache, function(dep, location){
+		if (!dep.isNew) return
+		if (!fs.existsSync(location)) return
+		log.warn('removing', '%p', location)
+		rm(dep.location)
+	})
+	throw e
 }
