@@ -5,7 +5,7 @@ exports.error =
 exports.warn = 
 exports.info =
 exports.debug = function(){}
-exports.format = format
+exports.format = fmt
 
 /**
  * format `msg` with a `type` header
@@ -31,7 +31,7 @@ function space(type, msg, color){
  */
 
 function out(type, msg){
-	msg = format.apply(this, [].slice.call(arguments, 1))
+	msg = fmt.apply(this, [].slice.call(arguments, 1))
 	process.stdout.write(space(type, msg))
 }
 
@@ -43,7 +43,7 @@ function out(type, msg){
  */
 
 function error(type, msg){
-	msg = format.apply(this, [].slice.call(arguments, 1))
+	msg = fmt.apply(this, [].slice.call(arguments, 1))
 	process.stderr.write(space(type, msg))
 }
 
@@ -84,49 +84,37 @@ exports.enable = function(level){
  * @return {String}
  */
 
-function format(str){
-	var args = arguments
+function fmt(str){
 	var i = 1
-	return str.replace(/%(s|d|j|p|u)/g, function(_, t){
-		return tokens[t](args[i], args, i++)
+	var args = arguments
+	return str.replace(/%([a-z])/g, function(_, type){
+		return typeof fmt[type] == 'function'
+			? fmt[type](args[i++])
+			: _
 	})
 }
 
-/**
- * placeholder transformations
- * 
- * @param {Any} value
- * @return {String}
- */
+fmt.s = String
 
-var tokens = {
-	// path
-	p: function(p){
-		if (p[0] != '/') return p
-		var rel = path.relative(process.cwd(), p)
-		if (rel[0] == '.') return relHome(p)
-		return './' + rel
-	},
-	// uri
-	u: function(uri){
-		return decodeURIComponent(uri)
-	},
-	// json
-	j: function(obj){
-		return JSON.stringify(obj, null, 2).replace(/\n/g, '\n  ')
-	},
-	// string
-	s: function(str){
-		return str
-	},
-	// number
-	d: function(n){
-		n = n.toString().split('.')
-		n[0] = n[0].replace(/(\d)(?=(\d\d\d)+(?!\d))/g, '$1' + ',')
-		return n.join('.')
-	}
+fmt.p = function(p){
+	if (p[0] != '/') return p
+	var rel = path.relative(process.cwd(), p)
+	// parent directory
+	if (rel[0] == '.') return p.replace(process.env.HOME, '~')
+	// child directory
+	return './' + rel
 }
 
-function relHome(path){
-	return path.replace(process.env.HOME, '~')
+fmt.u = function uri(uri){
+	return decodeURIComponent(uri)
+}
+
+fmt.j = function json(obj){
+	return JSON.stringify(obj, null, 2).replace(/\n/g, '\n  ')
+}
+
+fmt.d = function number(n){
+	n = String(n).split('.')
+	n[0] = n[0].replace(/(\d)(?=(\d\d\d)+(?!\d))/g, '$1' + ',')
+	return n.join('.')
 }
