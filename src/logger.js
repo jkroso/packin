@@ -1,11 +1,16 @@
 
 var path = require('path')
 
-exports.error = 
-exports.warn = 
-exports.info =
-exports.debug = function(){}
 exports.format = fmt
+
+exports.disable = function(){
+	exports.error = 
+	exports.warn = 
+	exports.info =
+	exports.debug = function(){}
+}
+
+exports.disable()
 
 /**
  * format `msg` with a `type` header
@@ -31,6 +36,7 @@ function space(type, msg, color){
  */
 
 function out(type, msg){
+	if (exports.ignore && exports.ignore.test(type)) return
 	msg = fmt.apply(this, [].slice.call(arguments, 1))
 	process.stdout.write(space(type, msg))
 }
