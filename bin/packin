@@ -298,17 +298,11 @@ program
 	.action(function(){
 		var options = arguments[arguments.length - 1]
 		var deps = program.args.slice(0, -1).filter(Boolean)
-		var opts = {
-			folder: options.folder,
-			files: options.meta,
-			development: options.development,
-			production: options.production,
-			retrace: options.retrace
-		}
+		options.files = options.meta // alias
 
-		if (fs.existsSync(opts.folder)) {
-			if (opts.clean) rm(opts.folder) // rm(1) -r
-			else fs.utimesSync(opts.folder, new Date, new Date) // touch(1)
+		if (fs.existsSync(options.folder)) {
+			if (options.clean) rm(options.folder) // rm(1) -r
+			else fs.utimesSync(options.folder, new Date, new Date) // touch(1)
 		}
 
 		// handle interuption
@@ -320,7 +314,7 @@ program
 		})
 
 		// install all
-		if (!deps.length) return install(cwd, opts).read(render, onError)
+		if (!deps.length) return install(cwd, options).read(render, onError)
 
 		// install listed deps
 		var folder = path.resolve(options.folder)
@@ -328,7 +322,7 @@ program
 			return parseKeyValue(dep).then(function(kv){
 				var name = path.join(folder, kv[0])
 				var url = kv[1]
-				return install(url, name, opts)
+				return install(url, name, options)
 			})
 		}).read(null, onError)
 
