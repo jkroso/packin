@@ -81,4 +81,3 @@ var inflate = lift(function(res, url){
 	log.warn('exec', '%s', cmd)
 	exec(cmd, cb)
 })}
- 
