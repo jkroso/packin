@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 
-var getDeps = require('../src/get-deps')
-var apply = require('lift-result/apply')
+var Package = require('../src/package')
 var github = require('../src/github')
-var writeFile = require('writefile')
+var deps = require('../src/get-deps')
 var each = require('foreach/async')
 var log = require('../src/logger')
 var program = require('commander')
-var fs = require('lift-result/fs')
+var lift = require('lift-result')
 var npm = require('../src/npm')
 var Result = require('result')
 var map = require('map/async')
@@ -15,6 +14,8 @@ var all = require('when-all')
 var rm = require('rm-r/sync')
 var install = require('..')
 var path = require('path')
+var fs = require('fs')
+var relative = path.relative
 var format = log.format
 
 // enable basic info
@@ -29,8 +30,6 @@ var cwd = process.cwd()
 var defaults = fs.existsSync(home+'/config.json')
 	? require(home+'/config.json')
 	: {}
-'folder' in defaults || (defaults.folder = 'deps')
-'meta' in defaults   || (defaults.meta = ['deps.json', 'component.json', 'package.json'])
 
 program
 	.version(require('../package').version)
@@ -71,12 +70,12 @@ program
 				? json.production
 				: json.development
 			if (!(dep in deps)) throw new Error(dep + ' not installed')
-			return apply(update(deps[dep], dep), function(url){
+			Result.read(update(deps[dep], dep), function(url){
 				deps[dep] = url
-			}).read(function(){
 				saveJSON(json)
 				clearLine()
 			})
+			return
 		}
 		if (json.production) json.production = map(json.production, update)
 		if (json.development) json.development = map(json.development, update)
@@ -218,40 +217,40 @@ program
 	.description('show dependencies')
 	.option('-f, --folder <dir>', 'dependency directory', defaults.folder)
 	.action(function(opts){
-		var dev = getDeps(cwd, {
-			files: defaults.meta,
-			development: true
+		log.info = function(){} // disable logger
+		var files = Package.create(cwd).files
+		print('')
+		var pro = deps(cwd, files, true, false)
+		var dev = deps(cwd, files, false, true)
+		show('production', pro).read(function(){
+			show('development', dev).read()
 		})
-		var pro = getDeps(cwd, {
-			files: defaults.meta,
-			production: true
-		})
-		apply(dev, pro, function(development, production){
-			print('')
-			show('production', production)
-			show('development', development)
-
-			function show(key, obj){
-				var keys = Object.keys(obj)
-				if (!keys.length) return
-				print(format('  %s', blue(key)))
-				keys.forEach(function(key){
-					var url = obj[key]
-					if (/github\.com\/([^\/]+)\/([^\/]+)\/tarball\/(.+)/.test(url)) {
-						url = RegExp.$1 + '/' + RegExp.$2 + '@' + RegExp.$3
-					}
-					if (/registry\.npmjs\.org\/[^\/]+\/-\/(.*)-(.*)\.tgz/.test(url)) {
-						url = RegExp.$1 + '@' + RegExp.$2
-					}
-					print(format('    %s %p', blue(key), url))
-				})
-				print('')
-			}
-		}).read()
 	})
+
+var show = lift(function(key, obj){
+	if (!Object.keys(obj).length) return
+	print(format('  %s', blue(key)))
+	return each(obj, lift(function(url, key){
+		if (/github\.com\/([^\/]+)\/([^\/]+)\/tarball\/(.+)/.test(url)) {
+			url = RegExp.$1 + '/' + RegExp.$2 + '@' + RegExp.$3
+		}
+		if (/registry\.npmjs\.org\/[^\/]+\/-\/(.*)-(.*)\.tgz/.test(url)) {
+			url = RegExp.$1 + '@' + RegExp.$2
+		}
+		print(format('    %s %p', blue(key), url))
+	})).then(print)
+})
 
 function blue(text){
 	return '\033[36m' + text + '\033[m'
+}
+
+function green(text){
+	return '\033[32m' + text + '\033[m'
+}
+
+function grey(text){
+	return '\033[90m' + text + '\033[m'
 }
 
 program
@@ -298,19 +297,18 @@ program
 	})
 	.action(function(){
 		var options = arguments[arguments.length - 1]
-		var deps = program.args.slice(0, -1)
+		var deps = program.args.slice(0, -1).filter(Boolean)
 		var opts = {
 			folder: options.folder,
 			files: options.meta,
-			log: Object.create(null),
 			development: options.development,
 			production: options.production,
 			retrace: options.retrace
 		}
 
-		if (fs.existsSync(options.folder)) {
-			if (options.clean) rm(options.folder) // rm(1) -r
-			else fs.utimesSync(options.folder, new Date, new Date) // touch(1)
+		if (fs.existsSync(opts.folder)) {
+			if (opts.clean) rm(opts.folder) // rm(1) -r
+			else fs.utimesSync(opts.folder, new Date, new Date) // touch(1)
 		}
 
 		// handle interuption
@@ -322,7 +320,7 @@ program
 		})
 
 		// install all
-		if (!deps.length) return install(cwd, opts).read(null, onError)
+		if (!deps.length) return install(cwd, opts).read(render, onError)
 
 		// install listed deps
 		var folder = path.resolve(options.folder)
@@ -330,7 +328,7 @@ program
 			return parseKeyValue(dep).then(function(kv){
 				var name = path.join(folder, kv[0])
 				var url = kv[1]
-				return install.one(url, name, opts)
+				return install(url, name, opts)
 			})
 		}).read(null, onError)
 
@@ -338,16 +336,49 @@ program
 			cleanup()
 			throw e
 		}
+	})
 
-		function cleanup(){
-			each(opts.log, function(dep){
-				if (dep.isNew && fs.existsSync(dep.location)) {
-					log.warn('removing', '%p', dep.location)
-					rm(dep.location)
-				}
-			})
+function cleanup(){
+	each(Package.cache, function(dep){
+		if (dep.isNew && fs.existsSync(dep.location)) {
+			log.warn('removing', '%p', dep.location)
+			rm(dep.location)
 		}
 	})
+}
+
+function render(pkg){
+	var root = { label: blue('.'), nodes: [] }
+	var tuple = [pkg, root, '']
+	var tuples = []
+	var pkgs = []
+	var i = 0
+
+	// generate tree breadth first
+	while (tuple) {
+		var pkg = tuple[0]
+		var node = tuple[1]
+		var path = tuple[2]
+		var loaded = pkg.hasOwnProperty('dependencies')
+		if (loaded) each(pkg.dependencies, function(dep, name){
+			if (pkgs.indexOf(dep) >= 0) {
+				node.nodes.push(green(relative(path, dep.path)))
+			} else {
+				pkgs.push(dep)
+				var child = {
+					label: blue(name) + grey('@' + dep.version),
+					nodes: []
+				}
+				node.nodes.push(child)
+				dep.path = path + '/' + name
+				tuples.push([dep, child, dep.path])
+			}
+		})
+		tuple = tuples[i++]
+	}
+
+	console.log(require('archy')(root, '\u001b[90m  '))
+}
 
 program.parse(process.argv)
 
@@ -358,5 +389,5 @@ function list (args) {
 }
 
 function print(txt){
-	process.stdout.write(txt+'\n')
+	process.stdout.write((txt || '') + '\n')
 }
