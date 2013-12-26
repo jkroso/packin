@@ -4,7 +4,7 @@
   "description": "a simple package manager",
   "dependencies": {
     "github-latest": "jkroso/github-latest#0.3.0",
-    "foreach": "jkroso/forEach#0.8.8",
+    "foreach": "jkroso/forEach#0.8.9",
     "reduce": "jkroso/reduce#0.1.4",
     "filter": "jkroso/filter#0.1.3",
     "map": "jkroso/map#0.2.9",

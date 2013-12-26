@@ -230,7 +230,7 @@ program
 var show = lift(function(key, obj){
 	if (!Object.keys(obj).length) return
 	print(format('  %s', blue(key)))
-	return each(obj, lift(function(url, key){
+	return each(obj, function(url, key){
 		if (/github\.com\/([^\/]+)\/([^\/]+)\/tarball\/(.+)/.test(url)) {
 			url = RegExp.$1 + '/' + RegExp.$2 + '@' + RegExp.$3
 		}
@@ -238,7 +238,7 @@ var show = lift(function(key, obj){
 			url = RegExp.$1 + '@' + RegExp.$2
 		}
 		print(format('    %s %p', blue(key), url))
-	})).then(print)
+	}).then(print)
 })
 
 function blue(text){
