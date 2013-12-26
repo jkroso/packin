@@ -27,8 +27,8 @@ var cwd = process.cwd()
 
 // load default config
 
-var defaults = fs.existsSync(home+'/config.json')
-	? require(home+'/config.json')
+var defaults = fs.existsSync(home + '/config.json')
+	? require(home + '/config.json')
 	: {}
 
 program
@@ -231,23 +231,24 @@ function grey(text){
 }
 
 program
-	.command('rm <key>')
+	.command('rm')
 	.description('remove a package from this packages dependencies')
 	.option('-d, --development', 'add as a development dependency')
 	.option('-f, --folder <dir>', 'dependency folder', defaults.folder)
-	.action(function(name, opts){
-		var pkg = cwd + '/deps.json'
-		var json = require(pkg)
-		var deps = opts.development
+	.action(function(){
+		var options = arguments[arguments.length - 1]
+		var keys = program.args.slice(0, -1)
+		var json = getJSON()
+		var deps = options.development
 			? json.development
 			: json.production
-		if (deps && name in deps) {
-			delete deps[name]
-			var file = cwd + '/' + program.folder + '/' + name
+		deps && keys.forEach(function(key){
+			delete deps[key]
+			var file = path.join(cwd, options.folder, key)
 			try { fs.unlinkSync(file) }
 			catch (e) {}
-			fs.writeFileSync(pkg, JSON.stringify(json, null, 2))
-		}
+		})
+		saveJSON(json)
 	})
 
 program
