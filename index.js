@@ -1,9 +1,10 @@
 
 var Package = require('./src/package')
+var each = require('foreach/async')
+var fs = require('lift-result/fs')
 var log = require('./src/logger')
-var each = require('foreach')
+var join = require('path').join
 var rm = require('rm-r/sync')
-var fs = require('fs')
 
 module.exports = install
 
@@ -33,10 +34,30 @@ function install(url, to, opts){
 		pkg.development = true
 	}
 
-	return pkg.installed.then(function(){
-		if (url != to) return pkg.link(to).then(function(){ return pkg })
-		return pkg
-	}, undo)
+	var seen = {}
+	function addLinks(pkg){
+		if (seen[pkg.location]) return
+		seen[pkg.location] = true
+		var folder = join(pkg.location, pkg.folder)
+		return mkdir(folder).then(function(){
+			return each(pkg.dependencies, function(dep, name){
+				return dep
+					.link(join(folder, name))
+					.then(addLinks.bind(null, dep))
+			})
+		})
+	}
+
+	return pkg.install().then(function(){
+		if (url == to) return addLinks(pkg)
+		return pkg.link(to).then(addLinks.bind(null, pkg))
+	}, undo).yeild(pkg)
+}
+
+function mkdir(folder){
+	return fs.mkdir(folder).then(null, function(e){
+		if (e.code != 'EEXIST') throw e
+	})
 }
 
 var defaultFiles = Package.prototype.possibleFiles

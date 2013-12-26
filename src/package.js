@@ -22,6 +22,9 @@ Package.cache = Object.create(null)
 /**
  * create a package unless one has already been created
  *
+ * TODO: consider returning a promise for a pre-loaded package
+ * since you pretty much always want to load them anyway
+ *
  * @param {String} url
  * @return {Package}
  */
@@ -101,22 +104,21 @@ lazy(Package.prototype, 'loaded', function(){
 })
 
 /**
- * installed `this` package and its dependencies
- * @type {Promise}
+ * installed `this` package and all its dependencies
+ *
+ * @return {Promise}
+ * @api public
  */
 
-lazy(Package.prototype, 'installed', function(){
-	return when.call(this, this.loaded, function(){
-		if (!(this.isNew || this.retrace)) return // don't recur
-		var folder = this.location + '/' + this.folder
-		var deps = this.dependencies
-		return mkdir(folder).then(function(){
-			return each(deps, function(dep, name){
-				return dep.link(join(folder, name))
-			})
-		})
-	})
-})
+Package.prototype.install = function(){
+	var seen = {}
+	return function load(pkg){
+		if (!pkg.isNew && !pkg.retrace) return // don't recur
+		if (seen[pkg.location]) return
+		seen[pkg.location] = true
+		return each(pkg.dependencies, load)
+	}(this)
+}
 
 /**
  * the packages version tag
@@ -139,37 +141,29 @@ lazy(Package.prototype, 'version', function(){
 
 Package.prototype.link = function(from){
 	var to = this.location
-	return when(this.installed, function(){
-		return fs.readlink(from).then(function(path){
-			if (path != to) {
-				log.debug('correcting symlink %p', from)
-				fs.unlinkSync(from)
-				fs.symlinkSync(to, from)
-			}
-		}, function(e){
-			switch (e.code) {
-				case 'ENOENT': // no file
-					return fs.symlink(to, from).then(null, function(e){
-						if (e.code == 'EEXIST') return // must be a race going on
-						throw new Error(e.stack)
-					})
-				case 'EINVAL': // not a symlink
-					log.info('warning', 'not linking %p since its a hard file', from)
-					break
-				default: throw new Error(e.stack)
-			}
-		})
-	})
+	function correct(path){
+		if (path != to) {
+			log.debug('correcting symlink %p', from)
+			fs.unlinkSync(from)
+			fs.symlinkSync(to, from)
+		}
+	}
+	function error(e){
+		switch (e.code) {
+			case 'ENOENT': // no file
+				return fs.symlink(to, from).then(null, function(e){
+					if (e.code == 'EEXIST') return // must be a race going on
+					throw new Error(e.stack)
+				})
+			case 'EINVAL': // not a symlink
+				log.info('warning', 'not linking %p since its a hard file', from)
+				break
+			default: throw new Error(e.stack)
+		}
+	}
+	return fs.readlink(from).then(correct, error)
 }
 
 var if_ = lift(function(bool, a, b){
 	return bool ? a() : b()
 })
-
-function mkdir(folder){
-	var er = new Error()
-	return fs.mkdir(folder).then(null, function(e){
-		er.message = e.message
-		if (e.code != 'EEXIST') throw er
-	})
-}

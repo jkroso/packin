@@ -1,5 +1,4 @@
 
-var spawn = require('child_process').spawn
 var exec = require('child_process').exec
 var equal = require('fs-equals/assert')
 var Package = require('../src/package')
@@ -18,16 +17,18 @@ var app = express()
 // app.use(express.logger('dev'))
 
 app.get('/:package/:version', function(req, res){
-	var pkg = req.params.package
 	var version = req.params.version
+	var pkg = req.params.package
 	var dir = path.join(__dirname, 'packages', pkg, version)
-	res.set('content-encoding', 'gzip')
-	spawn('tar', ['c', dir]).stdout
-		.pipe(zlib.createGzip())
-		.pipe(res)
-})
-
-app.listen(3000)
+	var out = zlib.createGzip()
+	out.pipe(res)
+	exec('tar -c ' + dir, function(e, tar, stderr){
+		if (e) return res.send(500, stderr)
+		res.status(200)
+		res.set('content-encoding', 'gzip')
+		out.end(tar)
+	})
+}).listen(3000)
 
 // log.enable('debug')
 
@@ -40,11 +41,11 @@ var filterOpts = {
 }
 
 function rmdir(dir, cb){
-	exec('rm -rf '+dir, cb)
+	exec('rm -rf ' + dir, cb)
 }
 
 beforeEach(function(done){
-	rmdir(cache+'/localhost:3000', done)
+	rmdir(cache + '/localhost:3000', done)
 })
 
 describe('install', function(){
@@ -98,10 +99,11 @@ describe('install', function(){
 	})
 
 	it('should return the top level Package', function(done){
-		install(dir).then(function(pkg){
+		install(dir).read(function(pkg){
 			pkg.should.be.an.instanceOf(require('../src/package'))
 			pkg.dependencies.value.should.include.keys('equals', 'type')
-		}).node(done)
+			rmdir(dir + '/deps', done)
+		})
 	})
 
 	it('should pick the meta data file with the most data', function(done){
@@ -121,7 +123,18 @@ describe('install', function(){
 			files.should.include('equals')
 			files.should.include('type')
 			files.should.include('local')
-		}).node(done)
+			rmdir(dir + '/deps', done)
+		})
+	})
+
+	it('should handle cyclic dependency graphs', function(done){
+		var dir = __dirname + '/cyclic'
+		install(dir).read(function(pkg){
+			fs.readdirSync(dir + '/deps').should.eql(['a'])
+			fs.readdirSync(dir + '/deps/a/deps').should.eql(['b'])
+			fs.readdirSync(dir + '/deps/a/deps/b/deps').should.eql(['a'])
+			rmdir(dir + '/deps', done)
+		}, done)
 	})
 })
 

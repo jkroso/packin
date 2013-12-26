@@ -1,0 +1,5 @@
+{
+	"production": {
+		"b": "http://localhost:3000/circular-b/master"
+	}
+}
