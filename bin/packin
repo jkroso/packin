@@ -20,7 +20,7 @@ var format = log.format
 
 // enable basic info
 
-log.enable('error')
+log.enable('info')
 
 var home = process.env.HOME+'/.packin'
 var cwd = process.cwd()
@@ -216,7 +216,7 @@ program
 	.command('ls')
 	.description('show dependencies')
 	.action(function(){
-		log.info = function(){} // disable logger
+		log.disable()
 		var files = Package.create(cwd).files
 		print('')
 		var pro = deps(cwd, files, true, false)
@@ -273,6 +273,19 @@ program
 	})
 
 program
+	.command('tree')
+	.description('render the dependency tree')
+	.option('-d, --development', 'include development dependencies')
+	.action(function(options){
+		log.disable()
+		var root = Package.create(cwd)
+		root.development = Boolean(options.development)
+		root.install().read(function(){
+			render(root)
+		})
+	})
+
+program
 	.command('install [deps]')
 	.description('install this packages dependencies')
 	.option('-d, --development', 'install development dependencies')
@@ -280,6 +293,7 @@ program
 	.option('-f, --folder <dir>', 'name of the directory for installed packages', defaults.folder)
 	.option('-m, --meta <files>', 'list of meta files to read', list, defaults.meta)
 	.option('-R, --no-retrace', 'don\'t step into existing dependencies')
+	.option('-t, --tree', 'render the dependency tree on completion')
 	.option('-c, --clean', 'remove unused dependencies')
 	.on('--help', function () {
 		print('  Examples:')
@@ -313,7 +327,11 @@ program
 		})
 
 		// install all
-		if (!deps.length) return install(cwd, options).read(render, onError)
+		if (!deps.length) {
+			return install(cwd, options).read(function(pkg){
+				if (options.tree) render(pkg)
+			}, onError)
+		}
 
 		// install listed deps
 		var folder = path.resolve(options.folder)
@@ -340,7 +358,7 @@ function cleanup(){
 	})
 }
 
-function render(pkg){
+function render(pkg, deep){
 	var root = { label: blue('.'), nodes: [] }
 	var tuple = [pkg, root, '']
 	var tuples = []
