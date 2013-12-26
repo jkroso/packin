@@ -29,7 +29,9 @@ function install(url, to, opts){
 	var pkg = Package.create(url)
 	if (pkg.local) pkg.loaded = true
 	pkg.retrace = true // always step into first level
-	pkg.development = opts.development == null && opts.production == null
+	if (opts.development == null && opts.production == null) {
+		pkg.development = true
+	}
 
 	return pkg.installed.then(function(){
 		if (url != to) return pkg.link(to).then(function(){ return pkg })
