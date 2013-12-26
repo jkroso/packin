@@ -215,8 +215,7 @@ function add(key, url, opts){
 program
 	.command('ls')
 	.description('show dependencies')
-	.option('-f, --folder <dir>', 'dependency directory', defaults.folder)
-	.action(function(opts){
+	.action(function(){
 		log.info = function(){} // disable logger
 		var files = Package.create(cwd).files
 		print('')
