@@ -40,7 +40,7 @@ program.on('verbose', function(){
 })
 
 program
-	.command('add <key:url>')
+	.command('add')
 	.description('add a package to this packages dependencies')
 	.option('-d, --development', 'add as a development dependency')
 	.on('--help', function(){
@@ -53,10 +53,22 @@ program
 		print('    $ packin add jkroso/graph')
 		print('')
 	})
-	.action(function(kv, opts){
-		parseKeyValue(kv).read(function(kv){
-			add(kv[0], kv[1], opts)
-		})
+	.action(function(){
+		var options = arguments[arguments.length - 1]
+		var args = program.args.slice(0, -1)
+		var file = cwd + '/deps.json'
+		var json = getJSON(file)
+		each(args, function(arg){
+			return parseKeyValue(arg).then(function(kv){
+				var name = kv[0]
+				var url = kv[1]
+				var deps = options.development
+					? json.development || (json.development = {})
+					: json.production  || (json.production = {})
+				deps[name] = url
+				log.info(name, '%p', url)
+			})
+		}).read(saveJSON.bind(null, json, file))
 	})
 
 program
@@ -176,30 +188,6 @@ function getJSON(file){
 function saveJSON(json, file){
 	file || (file = cwd + '/deps.json')
 	fs.writeFileSync(file, JSON.stringify(json, null, 2))
-}
-
-/**
- * add an entry to the deps.json file
- *
- * @param {String} key
- * @param {String} url
- * @param {Object} opts
- */
-
-function add(key, url, opts){
-	var file = cwd + '/deps.json'
-	var json = getJSON(file)
-
-	// --development
-	if (opts.development) {
-		var deps = json.development || (json.development = {})
-	} else {
-		var deps = json.production || (json.production = {})
-	}
-
-	log.info(key, url)
-	deps[key] = url
-	saveJSON(json, file)
 }
 
 program
