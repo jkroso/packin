@@ -3,6 +3,8 @@ var path = require('path')
 
 exports.format = fmt
 
+exports.center = 0
+
 exports.disable = function(){
 	exports.error = 
 	exports.warn = 
@@ -21,11 +23,12 @@ exports.disable()
  */
 
 function space(type, msg, color){
-	color = color || '36'
-	var w = 12
-	var len = Math.max(0, w - type.length)
-	var pad = Array(len + 1).join(' ')
-	return '\033[' + color + 'm  ' + type + '\033[m: \033[90m' + msg + '\033[m\n'
+	var pad = Math.max(3, exports.center - type.length)
+	return Array(pad).join(' ') 
+		+ '\033[' + (color || '36') + 'm' 
+		+ type + '\033[90m: ' 
+		+ msg.replace(/\n/g, '\n' + Array(pad + type.length + 2).join(' '))
+		+ '\033[m\n'
 }
 
 /**
@@ -37,8 +40,19 @@ function space(type, msg, color){
 
 function out(type, msg){
 	if (exports.ignore && exports.ignore.test(type)) return
+	if (exports._status) clearLine()
 	msg = fmt.apply(this, [].slice.call(arguments, 1))
 	process.stdout.write(space(type, msg))
+}
+
+exports.status = function(value){
+	if (exports._status) clearLine()
+	exports._status = value
+	value && process.stdout.write(value)
+}
+
+function clearLine(){
+	process.stdout.write('\033[2K\033[0G')
 }
 
 /**
@@ -53,8 +67,6 @@ function error(type, msg){
 	process.stderr.write(space(type, msg))
 }
 
-
-
 /**
  * log a formated string
  * @param {String} str
@@ -65,7 +77,6 @@ function debug(str){
 	args.unshift('debug')
 	error.apply(null, args)
 }
-
 
 /**
  * progressivly enable logging types
@@ -116,7 +127,7 @@ fmt.u = function uri(uri){
 }
 
 fmt.j = function json(obj){
-	return JSON.stringify(obj, null, 2).replace(/\n/g, '\n  ')
+	return JSON.stringify(obj, null, 2)
 }
 
 fmt.d = function number(n){

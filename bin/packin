@@ -63,6 +63,7 @@ program
 	.command('update [dep]')
 	.description('update deps to their latest release')
 	.action(function(dep){
+		log.center = 17
 		var json = getJSON()
 		var pending = 0
 		if (dep) {
@@ -73,7 +74,7 @@ program
 			Result.read(update(deps[dep], dep), function(url){
 				deps[dep] = url
 				saveJSON(json)
-				clearLine()
+				log.status()
 			})
 			return
 		}
@@ -81,7 +82,7 @@ program
 		if (json.development) json.development = map(json.development, update)
 		all(json).read(function(json){
 			saveJSON(json)
-			clearLine()
+			log.status()
 		})
 
 		function update(url, key){
@@ -89,7 +90,6 @@ program
 				var user = RegExp.$1
 				var repo = RegExp.$2
 				var oldtag = RegExp.$3
-				clearLine()
 				writePending(++pending)
 				return github.tag(user, repo).then(function(tag){
 					var id = user + '/' + repo
@@ -100,7 +100,6 @@ program
 			if (/registry\.npmjs\.org\/([^\/]+)\/-\/[^\/]+-(.+)\.tgz/.test(url)) {
 				var id = RegExp.$1
 				var tag = RegExp.$2
-				clearLine()
 				writePending(++pending)
 				return npm.tag(id, '>=' + tag).then(function(latest){
 					logUpdate(id, tag, latest)
@@ -111,23 +110,14 @@ program
 		}
 
 		function logUpdate(id, old, now){
-			clearLine()
-			if (old != now) {
-				log.info(id, '%s -> %s', old, now)
-			} else {
-				log.info(id, '%s', old)
-			}
+			if (old != now) log.info(id, '%s -> %s', old, now)
+			else log.info(id, '%s', old)
 			writePending(--pending)
 		}
 	})
 
-
 function writePending(pending){
-	process.stdout.write(blue('\r » ' + pending + ' pending'))
-}
-
-function clearLine(){
-	process.stdout.write('\033[2K\033[0G')
+	log.status(blue('  » ' + pending + ' pending'))
 }
 
 program
@@ -312,6 +302,8 @@ program
 		var options = arguments[arguments.length - 1]
 		var deps = program.args.slice(0, -1).filter(Boolean)
 		options.files = options.meta // alias
+		if (!program.verbose) log.ignore = /exists/
+		log.center = 13
 
 		if (fs.existsSync(options.folder)) {
 			if (options.clean) rm(options.folder) // rm(1) -r
