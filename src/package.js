@@ -47,7 +47,7 @@ Package.create = lift(function(url){
  * default config
  */
 
-Package.prototype.possibleFiles = ['package.json', 'component.json', 'deps.json']
+Package.prototype.possibleFiles = ['deps.json', 'package.json', 'component.json']
 Package.prototype.development = false
 Package.prototype.production = true
 Package.prototype.retrace = true
