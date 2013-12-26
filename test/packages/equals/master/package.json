@@ -1,7 +1,7 @@
 {
   "name": "equals",
   "dependencies": {
-    "type": "https://github.com/jkroso/type/archive/08b3600.tar.gz"
+    "type": "http://localhost:3000/type/master"
   },
   "devDependencies": {
     "mocha": "1.16.2",

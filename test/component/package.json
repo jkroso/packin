@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "declarative function composition inspired by prismatics graph library",
   "dependencies": {
-    "toposort": "git://github.com/marcelklehr/toposort"
+    "toposort": "marcelklehr/toposort#0.2.10"
   },
   "scripts": {
     "test": "make test"

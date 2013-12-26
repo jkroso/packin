@@ -65,7 +65,6 @@ describe('install', function(){
 
 	it('should install subdependencies', function(done){
 		install(__dirname+'/simple').then(function(){
-			debugger;
 			return equal(
 				__dirname+'/simple/deps/equals/deps/type',
 				__dirname+'/packages/type/master',
@@ -211,12 +210,12 @@ describe('component.json', function(){
 	})
 
 	it('should install subdependencies', function(done){
-		install(dir, {folder: 'node_modules'}).then(function(){
+		install(dir, {folder: 'node_modules'}).read(function(){
 			exists(dir + '/node_modules/toposort').should.be.true
 			require(dir).should.be.a('function')
 			exec('node '+__dirname+'/component/examples/basic', function(e, out, err){
 				if (e) return done(e)
-				out.toString().should.equal('2!\n')
+				String(out).should.equal('2!\n')
 				done()
 			})
 		})
