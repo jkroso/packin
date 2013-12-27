@@ -243,6 +243,8 @@ program
 			? json.development
 			: json.production
 		deps && keys.forEach(function(key){
+			if (key in deps) log.info(key, '%p', deps[key])
+			else return log.info('\033[31m' + key, 'not-found')
 			delete deps[key]
 			var file = path.join(cwd, options.folder, key)
 			try { fs.unlinkSync(file) }
