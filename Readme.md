@@ -16,6 +16,36 @@ _With npm_
 
     $ npm install packin --global
 
+## API
+
+Packin provides an [executable](bin/packin) designed primarily to be used via [make](//github.com/jkroso/move/blob/master/Makefile) but also provides a few nice commands to help you _manage_ your dependencies.
+
+## `packin-add deps... [-d]`
+
+The add command helps you add dependencies to you `./deps.json` file. It takes a list of dependencies in their shorthand form. If the dependecy is just a plain word it is assumed to come from [npm.org](http://npm.org). If it has one slash its assumed to come from [github](//github.com). If it starts with a `.` or a `/` then its assumed to be in the local filesystem. All three cases are demonstrated below:
+
+![animation](images/packin-add.gif)
+
+## `packin-install [-tpdmfRc]`
+
+The install command will recursively walk through all dependencies downloading them if necessary as it goes then add symlinks between all of them under the alias each package expects. Thats right __you__ get to deside the names of the packages you consume __not__ the person who wrote it. Also dependency cycles are fine unlike with `npm-install(1)`. A further difference from `npm-install(1)` is that it does have some important configuration options so if you project depends on `packin-install(1)` and is going to be published you should document your configuration in a Makefile.
+
+![animation](images/packin-install.gif)
+
+Notice how the second call returns almost immediatly. This is thanks to packins caching mechanism. Also this cache is global, so the first time install of your projects gets __faster__ the more projects you have previously installed with packin.
+
+## `packin-update`
+
+Iterate through each dependency and query their respective registries for the latest release tag. If the latest one is different from the current one the dep is swapped for the new one.
+
+![animation](images/packin-update.gif)
+
+## `packin-rm deps... [-d]`
+
+This is the undo for `packin-add`
+
+![animation](images/packin-rm.gif)
+
 ## Programmatic API
 
 ### install(directory, [options])
@@ -34,25 +64,7 @@ install(__dirname, {
   development: false,    // don't install development deps
   production: true,      // install production deps
   retrace: true          // update cached deps
-}); // => Promise<log>
+}); // => Promise<Package>
 ```
 
-The returned log contains a dependency graph of all the install dependencies.
-
-## CLI
-
-    Usage: packin [options] [command]
-    
-    Commands:
-    
-      add [options] <key:url> add a package to this packages dependencies
-      url <shorthand>        expand shorthand to a full url
-      ls [options]           display this packages dependencies
-      rm [options] <key>     remove a package from this packages dependencies
-      install [options]      install this packages dependencies
-    
-    Options:
-    
-      -h, --help     output usage information
-      -V, --version  output the version number
-      -v, --verbose  turn up the logging
+The returned `Package` gives you access to your whole dependency graph.
