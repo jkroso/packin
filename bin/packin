@@ -318,6 +318,8 @@ program
 		parseKeyValue(dep).then(function(kv){
 			var url = kv[1]
 			var name = path.resolve(to)
+			// just production deps by default
+			options.development = options.development || false
 			return install(url, name, options)
 		}).read(null, onError)
 
