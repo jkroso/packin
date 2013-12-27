@@ -58,13 +58,13 @@ program
 		var args = program.args.slice(0, -1)
 		var file = cwd + '/deps.json'
 		var json = getJSON(file)
+		var deps = options.development
+			? json.development || (json.development = {})
+			: json.production  || (json.production = {})
 		each(args, function(arg){
 			return parseKeyValue(arg).then(function(kv){
 				var name = kv[0]
 				var url = kv[1]
-				var deps = options.development
-					? json.development || (json.development = {})
-					: json.production  || (json.production = {})
 				deps[name] = url
 				log.info(name, '%p', url)
 			})
@@ -187,7 +187,7 @@ function getJSON(file){
 
 function saveJSON(json, file){
 	file || (file = cwd + '/deps.json')
-	fs.writeFileSync(file, JSON.stringify(json, null, 2))
+	fs.writeFileSync(file, JSON.stringify(json, null, 2) + '\n')
 }
 
 program
