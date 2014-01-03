@@ -3,7 +3,6 @@ var exec = require('child_process').exec
 var equal = require('fs-equals/assert')
 var Package = require('../src/package')
 var log = require('../src/logger')
-var express = require('express')
 var chai = require('./chai')
 var install = require('..')
 var path = require('path')
@@ -12,23 +11,23 @@ var fs = require('fs')
 var exists = fs.existsSync
 var readLink = fs.readlinkSync
 
-var app = express()
-
-// app.use(express.logger('dev'))
-
-app.get('/:package/:version', function(req, res){
-	var version = req.params.version
-	var pkg = req.params.package
-	var dir = path.join(__dirname, 'packages', pkg, version)
-	var out = zlib.createGzip()
-	out.pipe(res)
-	exec('tar -c ' + dir, function(e, tar, stderr){
-		if (e) return res.send(500, stderr)
-		res.status(200)
-		res.set('content-encoding', 'gzip')
-		out.end(tar)
+require('express')()
+	// .use(require('express').logger('dev'))
+	.get('/:package/:version', function(req, res){
+		var version = req.params.version
+		var pkg = req.params.package
+		var dir = path.join(__dirname, 'packages', pkg, version)
+		var out = zlib.createGzip()
+		out.pipe(res)
+		exec('tar -c ' + dir, function(e, tar, stderr){
+			if (e) return res.send(500, stderr)
+			res.status(200)
+			res.set('content-encoding', 'gzip')
+			out.end(tar)
+		})
 	})
-}).listen(3000)
+	.listen(3000)
+	.on('error', function(e){ console.error(e.stack) })
 
 // log.enable('debug')
 

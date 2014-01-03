@@ -39,7 +39,7 @@ download.git = git
 function http(url, dir){
 	var res = get(url).response.then(function(res){
 		if (res.statusType <3) return res
-		throw new Error('request failed ' + url)
+		throw new Error('http ' + res.status + ' ' + url)
 	})
 	return untar(dir, inflate(res, url))
 }
