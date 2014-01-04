@@ -11,13 +11,13 @@ var get = require('solicit/node').get
  */
 
 exports.tag = function(name, spec){
-	return latest(name, spec).then(getVersion, function(res){
-		throw new Error(res.message + ' ' + name)
-	})
+  return latest(name, spec).then(getVersion, function(res){
+    throw new Error(res.message + ' ' + name)
+  })
 }
 
 function getVersion(json){
-	return json.version
+  return json.version
 }
 
 /**
@@ -30,16 +30,16 @@ function getVersion(json){
  */
 
 exports.url = function(name, spec){
-	return latest(name, spec).then(getDist, function(res){
-		throw new Error(res.message + ' ' + name)
-	})
+  return latest(name, spec).then(getDist, function(res){
+    throw new Error(res.message + ' ' + name)
+  })
 }
 
 function getDist(json){
-	if (typeof json.dist.tarball != 'string') {
-		throw new Error('invalid npm response')
-	}
-	return json.dist.tarball
+  if (typeof json.dist.tarball != 'string') {
+    throw new Error('invalid npm response')
+  }
+  return json.dist.tarball
 }
 
 /**
@@ -52,5 +52,5 @@ function getDist(json){
  */
 
 function latest(name, spec){
-	return get('http://registry.npmjs.org/' + name + '/' + spec)
+  return get('http://registry.npmjs.org/' + name + '/' + spec)
 }

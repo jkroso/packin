@@ -18,10 +18,10 @@ module.exports = download
  */
 
 function download(url, dir){
-	var protocol = url.match(/^(\w+):\/\//)[1]
-	log.info('fetching', url)
-	if (protocol in download) return download[protocol](url, dir)
-	throw new TypeError('unsupported protocol ' + protocol)
+  var protocol = url.match(/^(\w+):\/\//)[1]
+  log.info('fetching', url)
+  if (protocol in download) return download[protocol](url, dir)
+  throw new TypeError('unsupported protocol ' + protocol)
 }
 
 download.http = download.https = http
@@ -37,11 +37,11 @@ download.git = git
  */
 
 function http(url, dir){
-	var res = get(url).response.then(function(res){
-		if (res.statusType <3) return res
-		throw new Error('http ' + res.status + ' ' + url)
-	})
-	return untar(dir, inflate(res, url))
+  var res = get(url).response.then(function(res){
+    if (res.statusType <3) return res
+    throw new Error('http ' + res.status + ' ' + url)
+  })
+  return untar(dir, inflate(res, url))
 }
 
 /**
@@ -53,14 +53,14 @@ function http(url, dir){
  */
 
 var inflate = lift(function(res, url){
-	var meta = res.headers
-	if (/(deflate|gzip)$/.test(meta['content-type'])
-	|| (/registry\.npmjs\.org/).test(url)) {
-		return res.pipe(zlib.createGunzip()).on('error', function(e){
-			throw new Error('gzip fucked up on ' + url)
-		})
-	}
-	return res
+  var meta = res.headers
+  if (/(deflate|gzip)$/.test(meta['content-type'])
+  || (/registry\.npmjs\.org/).test(url)) {
+    return res.pipe(zlib.createGunzip()).on('error', function(e){
+      throw new Error('gzip fucked up on ' + url)
+    })
+  }
+  return res
 })
 
 /**
@@ -73,11 +73,11 @@ var inflate = lift(function(res, url){
  */
 
  function git(url, dir){ return defer(function(cb){
-	var m = /#([^\/]+)$/.exec(url)
-	var cmd = 'git clone --depth 1 '
-	cmd += m != null
-		? url.slice(0, m.index) + ' ' + dir + ' --branch ' + m[1]
-		: url + ' ' + dir
-	log.warn('exec', '%s', cmd)
-	exec(cmd, cb)
+  var m = /#([^\/]+)$/.exec(url)
+  var cmd = 'git clone --depth 1 '
+  cmd += m != null
+    ? url.slice(0, m.index) + ' ' + dir + ' --branch ' + m[1]
+    : url + ' ' + dir
+  log.warn('exec', '%s', cmd)
+  exec(cmd, cb)
 })}

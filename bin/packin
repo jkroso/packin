@@ -28,349 +28,349 @@ var cwd = process.cwd()
 // load default config
 
 var defaults = fs.existsSync(home + '/config.json')
-	? require(home + '/config.json')
-	: {}
+  ? require(home + '/config.json')
+  : {}
 
 program
-	.version(require('../package').version)
-	.option('-v, --verbose', 'turn up the logging')
+  .version(require('../package').version)
+  .option('-v, --verbose', 'turn up the logging')
 
 program.on('verbose', function(){
-	log.enable('debug')
+  log.enable('debug')
 })
 
 program
-	.command('add')
-	.description('add a package to this packages dependencies')
-	.option('-d, --development', 'add as a development dependency')
-	.on('--help', function(){
-		print('  Examples:')
-		print('')
-		print('    # explicit')
-		print('    $ packin add graph:http://github.com/jkroso/graph/tarball/master')
-		print('')
-		print('    # from github')
-		print('    $ packin add jkroso/graph')
-		print('')
-	})
-	.action(function(){
-		var options = arguments[arguments.length - 1]
-		var args = program.args.slice(0, -1)
-		var file = cwd + '/deps.json'
-		var json = getJSON(file)
-		var deps = options.development
-			? json.development || (json.development = {})
-			: json.production  || (json.production = {})
-		each(args, function(arg){
-			return parseKeyValue(arg).then(function(kv){
-				var name = kv[0]
-				var url = kv[1]
-				deps[name] = url
-				log.info(name, '%p', url)
-			})
-		}).read(saveJSON.bind(null, json, file))
-	})
+  .command('add')
+  .description('add a package to this packages dependencies')
+  .option('-d, --development', 'add as a development dependency')
+  .on('--help', function(){
+    print('  Examples:')
+    print('')
+    print('    # explicit')
+    print('    $ packin add graph:http://github.com/jkroso/graph/tarball/master')
+    print('')
+    print('    # from github')
+    print('    $ packin add jkroso/graph')
+    print('')
+  })
+  .action(function(){
+    var options = arguments[arguments.length - 1]
+    var args = program.args.slice(0, -1)
+    var file = cwd + '/deps.json'
+    var json = getJSON(file)
+    var deps = options.development
+      ? json.development || (json.development = {})
+      : json.production  || (json.production = {})
+    each(args, function(arg){
+      return parseKeyValue(arg).then(function(kv){
+        var name = kv[0]
+        var url = kv[1]
+        deps[name] = url
+        log.info(name, '%p', url)
+      })
+    }).read(saveJSON.bind(null, json, file))
+  })
 
 program
-	.command('update [dep]')
-	.description('update deps to their latest release')
-	.action(function(dep){
-		log.center = 17
-		var json = getJSON()
-		var pending = 0
-		if (dep) {
-			var deps = json.production && dep in json.production
-				? json.production
-				: json.development
-			if (!(dep in deps)) throw new Error(dep + ' not installed')
-			Result.read(update(deps[dep], dep), function(url){
-				deps[dep] = url
-				saveJSON(json)
-				log.status()
-			})
-			return
-		}
-		if (json.production) json.production = map(json.production, update)
-		if (json.development) json.development = map(json.development, update)
-		all(json).read(function(json){
-			saveJSON(json)
-			log.status()
-		})
+  .command('update [dep]')
+  .description('update deps to their latest release')
+  .action(function(dep){
+    log.center = 17
+    var json = getJSON()
+    var pending = 0
+    if (dep) {
+      var deps = json.production && dep in json.production
+        ? json.production
+        : json.development
+      if (!(dep in deps)) throw new Error(dep + ' not installed')
+      Result.read(update(deps[dep], dep), function(url){
+        deps[dep] = url
+        saveJSON(json)
+        log.status()
+      })
+      return
+    }
+    if (json.production) json.production = map(json.production, update)
+    if (json.development) json.development = map(json.development, update)
+    all(json).read(function(json){
+      saveJSON(json)
+      log.status()
+    })
 
-		function update(url, key){
-			if (/github\.com\/([^\/]+)\/([^\/]+)\/tarball\/(.*)/.test(url)) {
-				var user = RegExp.$1
-				var repo = RegExp.$2
-				var oldtag = RegExp.$3
-				writePending(++pending)
-				return github.tag(user, repo).then(function(tag){
-					var id = user + '/' + repo
-					logUpdate(id, oldtag, tag)
-					return 'http://github.com/' + id + '/tarball/' + tag
-				})
-			}
-			if (/registry\.npmjs\.org\/([^\/]+)\/-\/[^\/]+-(.+)\.tgz/.test(url)) {
-				var id = RegExp.$1
-				var tag = RegExp.$2
-				writePending(++pending)
-				return npm.tag(id, '>=' + tag).then(function(latest){
-					logUpdate(id, tag, latest)
-					return 'http://registry.npmjs.org/'+id+'/-/'+id+'-'+latest+'.tgz'
-				})
-			}
-			return url
-		}
+    function update(url, key){
+      if (/github\.com\/([^\/]+)\/([^\/]+)\/tarball\/(.*)/.test(url)) {
+        var user = RegExp.$1
+        var repo = RegExp.$2
+        var oldtag = RegExp.$3
+        writePending(++pending)
+        return github.tag(user, repo).then(function(tag){
+          var id = user + '/' + repo
+          logUpdate(id, oldtag, tag)
+          return 'http://github.com/' + id + '/tarball/' + tag
+        })
+      }
+      if (/registry\.npmjs\.org\/([^\/]+)\/-\/[^\/]+-(.+)\.tgz/.test(url)) {
+        var id = RegExp.$1
+        var tag = RegExp.$2
+        writePending(++pending)
+        return npm.tag(id, '>=' + tag).then(function(latest){
+          logUpdate(id, tag, latest)
+          return 'http://registry.npmjs.org/'+id+'/-/'+id+'-'+latest+'.tgz'
+        })
+      }
+      return url
+    }
 
-		function logUpdate(id, old, now){
-			if (old != now) log.info(id, '%s -> %s', old, now)
-			else log.info(id, '%s', old)
-			writePending(--pending)
-		}
-	})
+    function logUpdate(id, old, now){
+      if (old != now) log.info(id, '%s -> %s', old, now)
+      else log.info(id, '%s', old)
+      writePending(--pending)
+    }
+  })
 
 function writePending(pending){
-	log.status(blue('  » ' + pending + ' pending'))
+  log.status(blue('  » ' + pending + ' pending'))
 }
 
 program
-	.command('url <shorthand>')
-	.description('expand shorthand to a full url')
-	.action(function(short){
-		parseKeyValue(short).read(function(url){
-			console.log(url[1])
-		})
-	})
+  .command('url <shorthand>')
+  .description('expand shorthand to a full url')
+  .action(function(short){
+    parseKeyValue(short).read(function(url){
+      console.log(url[1])
+    })
+  })
 
 function parseKeyValue(kv){
-	/([-.\w\/@]+)(?::([-.\w\/@]+))?/.exec(kv)
-	if (RegExp.$2) {
-		var key = RegExp.$1
-		var value = RegExp.$2
-	} else {
-		var value = RegExp.$1
-	}
+  /([-.\w\/@]+)(?::([-.\w\/@]+))?/.exec(kv)
+  if (RegExp.$2) {
+    var key = RegExp.$1
+    var value = RegExp.$2
+  } else {
+    var value = RegExp.$1
+  }
 
-	// local package
-	if (/^\.|^\//.exec(value)) {
-		value = path.resolve(value)
-		return Result.wrap([key || path.basename(value), value])
-	}
+  // local package
+  if (/^\.|^\//.exec(value)) {
+    value = path.resolve(value)
+    return Result.wrap([key || path.basename(value), value])
+  }
 
-	// github shorthand
-	if (/^([-.\w]+)\/([-.\w]+)(?:@(.*))?$/.exec(value)) {
-		var url = 'http://github.com/'+RegExp.$1+'/'+RegExp.$2+'/tarball/'
-		var user = RegExp.$1
-		var repo = RegExp.$2
-		var tag = RegExp.$3
-		if (!key) key = repo
-		if (tag) return Result.wrap([key, url + tag])
-		return github.tag(user, repo).then(function(tag){
-			return [key, url + tag]
-		})
-	}
+  // github shorthand
+  if (/^([-.\w]+)\/([-.\w]+)(?:@(.*))?$/.exec(value)) {
+    var url = 'http://github.com/'+RegExp.$1+'/'+RegExp.$2+'/tarball/'
+    var user = RegExp.$1
+    var repo = RegExp.$2
+    var tag = RegExp.$3
+    if (!key) key = repo
+    if (tag) return Result.wrap([key, url + tag])
+    return github.tag(user, repo).then(function(tag){
+      return [key, url + tag]
+    })
+  }
 
-	// npm.org
-	if (/^(.+)(?:@(.*))?$/.exec(value)) {
-		var pkg = RegExp.$1
-		var version = RegExp.$2 || '*'
-		return npm.url(pkg, version).then(function(url){
-			return [pkg, url]
-		})
-	}
+  // npm.org
+  if (/^(.+)(?:@(.*))?$/.exec(value)) {
+    var pkg = RegExp.$1
+    var version = RegExp.$2 || '*'
+    return npm.url(pkg, version).then(function(url){
+      return [pkg, url]
+    })
+  }
 }
 
 function getJSON(file){
-	file || (file = cwd + '/deps.json')
-	if (!fs.existsSync(file)) return {}
-	return JSON.parse(fs.readFileSync(file, 'utf8'))
+  file || (file = cwd + '/deps.json')
+  if (!fs.existsSync(file)) return {}
+  return JSON.parse(fs.readFileSync(file, 'utf8'))
 }
 
 function saveJSON(json, file){
-	file || (file = cwd + '/deps.json')
-	fs.writeFileSync(file, JSON.stringify(json, null, 2) + '\n')
+  file || (file = cwd + '/deps.json')
+  fs.writeFileSync(file, JSON.stringify(json, null, 2) + '\n')
 }
 
 program
-	.command('ls')
-	.description('show dependencies')
-	.action(function(){
-		log.disable()
-		var files = Package.create(cwd).files
-		print('')
-		var pro = deps(cwd, files, true, false)
-		var dev = deps(cwd, files, false, true)
-		show('production', pro).read(function(){
-			show('development', dev).read()
-		})
-	})
+  .command('ls')
+  .description('show dependencies')
+  .action(function(){
+    log.disable()
+    var files = Package.create(cwd).files
+    print('')
+    var pro = deps(cwd, files, true, false)
+    var dev = deps(cwd, files, false, true)
+    show('production', pro).read(function(){
+      show('development', dev).read()
+    })
+  })
 
 var show = lift(function(key, obj){
-	if (!Object.keys(obj).length) return
-	print(format('  %s', blue(key)))
-	return each(obj, function(url, key){
-		if (/github\.com\/([^\/]+)\/([^\/]+)\/tarball\/(.+)/.test(url)) {
-			url = RegExp.$1 + '/' + RegExp.$2 + '@' + RegExp.$3
-		}
-		if (/registry\.npmjs\.org\/[^\/]+\/-\/(.*)-(.*)\.tgz/.test(url)) {
-			url = RegExp.$1 + '@' + RegExp.$2
-		}
-		print(format('    %s %p', blue(key), url))
-	}).then(print)
+  if (!Object.keys(obj).length) return
+  print(format('  %s', blue(key)))
+  return each(obj, function(url, key){
+    if (/github\.com\/([^\/]+)\/([^\/]+)\/tarball\/(.+)/.test(url)) {
+      url = RegExp.$1 + '/' + RegExp.$2 + '@' + RegExp.$3
+    }
+    if (/registry\.npmjs\.org\/[^\/]+\/-\/(.*)-(.*)\.tgz/.test(url)) {
+      url = RegExp.$1 + '@' + RegExp.$2
+    }
+    print(format('    %s %p', blue(key), url))
+  }).then(print)
 })
 
 function blue(text){
-	return '\033[36m' + text + '\033[m'
+  return '\033[36m' + text + '\033[m'
 }
 
 function green(text){
-	return '\033[32m' + text + '\033[m'
+  return '\033[32m' + text + '\033[m'
 }
 
 function grey(text){
-	return '\033[90m' + text + '\033[m'
+  return '\033[90m' + text + '\033[m'
 }
 
 program
-	.command('rm')
-	.description('remove a package from this packages dependencies')
-	.option('-d, --development', 'add as a development dependency')
-	.option('-f, --folder <dir>', 'dependency folder', defaults.folder)
-	.action(function(){
-		var options = arguments[arguments.length - 1]
-		var keys = program.args.slice(0, -1)
-		var json = getJSON()
-		var deps = options.development
-			? json.development
-			: json.production
-		deps && keys.forEach(function(key){
-			if (key in deps) log.info(key, '%p', deps[key])
-			else return log.info('\033[31m' + key, 'not-found')
-			delete deps[key]
-			var file = path.join(cwd, options.folder, key)
-			try { fs.unlinkSync(file) }
-			catch (e) {}
-		})
-		saveJSON(json)
-	})
+  .command('rm')
+  .description('remove a package from this packages dependencies')
+  .option('-d, --development', 'add as a development dependency')
+  .option('-f, --folder <dir>', 'dependency folder', defaults.folder)
+  .action(function(){
+    var options = arguments[arguments.length - 1]
+    var keys = program.args.slice(0, -1)
+    var json = getJSON()
+    var deps = options.development
+      ? json.development
+      : json.production
+    deps && keys.forEach(function(key){
+      if (key in deps) log.info(key, '%p', deps[key])
+      else return log.info('\033[31m' + key, 'not-found')
+      delete deps[key]
+      var file = path.join(cwd, options.folder, key)
+      try { fs.unlinkSync(file) }
+      catch (e) {}
+    })
+    saveJSON(json)
+  })
 
 program
-	.command('tree')
-	.description('render the dependency tree')
-	.option('-d, --development', 'include development dependencies')
-	.action(function(options){
-		log.disable()
-		var root = Package.create(cwd)
-		root.development = Boolean(options.development)
-		root.install().read(function(){
-			render(root)
-		})
-	})
+  .command('tree')
+  .description('render the dependency tree')
+  .option('-d, --development', 'include development dependencies')
+  .action(function(options){
+    log.disable()
+    var root = Package.create(cwd)
+    root.development = Boolean(options.development)
+    root.install().read(function(){
+      render(root)
+    })
+  })
 
 program
-	.command('install [dep] [to]')
-	.description('install packages')
-	.option('-d, --development', 'install development dependencies')
-	.option('-p, --production', 'install production dependencies')
-	.option('-f, --folder <dir>', 'name of the directory for installed packages', defaults.folder)
-	.option('-m, --meta <files>', 'list of meta files to read', list, defaults.meta)
-	.option('-R, --no-retrace', 'don\'t step into existing dependencies')
-	.option('-t, --tree', 'render the dependency tree on completion')
-	.option('-c, --clean', 'remove unused dependencies')
-	.on('--help', function () {
-		print('  Examples:')
-		print('')
-		print('    # to emulate npm install')
-		print('    $ packin install -m package.json')
-		print('')
-		print('    # to use components and npm packages')
-		print('    $ packin install -m component.json,package.json')
-		print('')
-		print('    # install something arbitrary to a subfolder')
-		print('    $ packin install npm obsolete_stuff')
-		print('')
-	})
-	.action(function(dep, to, options){
-		options.files = options.meta // alias
-		if (!program.verbose) log.ignore = /exists/
-		log.center = 13
+  .command('install [dep] [to]')
+  .description('install packages')
+  .option('-d, --development', 'install development dependencies')
+  .option('-p, --production', 'install production dependencies')
+  .option('-f, --folder <dir>', 'name of the directory for installed packages', defaults.folder)
+  .option('-m, --meta <files>', 'list of meta files to read', list, defaults.meta)
+  .option('-R, --no-retrace', 'don\'t step into existing dependencies')
+  .option('-t, --tree', 'render the dependency tree on completion')
+  .option('-c, --clean', 'remove unused dependencies')
+  .on('--help', function () {
+    print('  Examples:')
+    print('')
+    print('    # to emulate npm install')
+    print('    $ packin install -m package.json')
+    print('')
+    print('    # to use components and npm packages')
+    print('    $ packin install -m component.json,package.json')
+    print('')
+    print('    # install something arbitrary to a subfolder')
+    print('    $ packin install npm obsolete_stuff')
+    print('')
+  })
+  .action(function(dep, to, options){
+    options.files = options.meta // alias
+    if (!program.verbose) log.ignore = /exists/
+    log.center = 13
 
-		if (fs.existsSync(options.folder)) {
-			if (options.clean) rm(options.folder) // rm(1) -r
-			else fs.utimesSync(options.folder, new Date, new Date) // touch(1)
-		}
+    if (fs.existsSync(options.folder)) {
+      if (options.clean) rm(options.folder) // rm(1) -r
+      else fs.utimesSync(options.folder, new Date, new Date) // touch(1)
+    }
 
-		// handle interuption
-		process.on('SIGINT', function(){
-			console.error()
-			console.error('Exiting...')
-			cleanup()
-			process.exit(1)
-		})
+    // handle interuption
+    process.on('SIGINT', function(){
+      console.error()
+      console.error('Exiting...')
+      cleanup()
+      process.exit(1)
+    })
 
-		// install deps of `cwd`
-		if (dep == null) {
-			return install(cwd, options).read(function(pkg){
-				if (options.tree) render(pkg)
-			}, onError)
-		}
+    // install deps of `cwd`
+    if (dep == null) {
+      return install(cwd, options).read(function(pkg){
+        if (options.tree) render(pkg)
+      }, onError)
+    }
 
-		if (to == null) options.help()
+    if (to == null) options.help()
 
-		// install `dep` to `to`
-		parseKeyValue(dep).then(function(kv){
-			var url = kv[1]
-			var name = path.resolve(to)
-			// just production deps by default
-			options.development = options.development || false
-			return install(url, name, options)
-		}).read(null, onError)
+    // install `dep` to `to`
+    parseKeyValue(dep).then(function(kv){
+      var url = kv[1]
+      var name = path.resolve(to)
+      // just production deps by default
+      options.development = options.development || false
+      return install(url, name, options)
+    }).read(null, onError)
 
-		function onError(e){
-			cleanup()
-			throw e
-		}
-	})
+    function onError(e){
+      cleanup()
+      throw e
+    }
+  })
 
 function cleanup(){
-	each(Package.cache, function(dep){
-		if (dep.isNew && fs.existsSync(dep.location)) {
-			log.warn('removing', '%p', dep.location)
-			rm(dep.location)
-		}
-	})
+  each(Package.cache, function(dep){
+    if (dep.isNew && fs.existsSync(dep.location)) {
+      log.warn('removing', '%p', dep.location)
+      rm(dep.location)
+    }
+  })
 }
 
 function render(pkg, deep){
-	var root = { label: blue('.'), nodes: [] }
-	var tuple = [pkg, root, '']
-	var tuples = []
-	var pkgs = []
-	var i = 0
+  var root = { label: blue('.'), nodes: [] }
+  var tuple = [pkg, root, '']
+  var tuples = []
+  var pkgs = []
+  var i = 0
 
-	// generate tree breadth first
-	while (tuple) {
-		var pkg = tuple[0]
-		var node = tuple[1]
-		var path = tuple[2]
-		var loaded = pkg.hasOwnProperty('dependencies')
-		if (loaded) each(pkg.dependencies, function(dep, name){
-			if (pkgs.indexOf(dep) >= 0) {
-				node.nodes.push(green(relative(path, dep.path)))
-			} else {
-				pkgs.push(dep)
-				var child = {
-					label: blue(name) + grey('@' + dep.version),
-					nodes: []
-				}
-				node.nodes.push(child)
-				dep.path = path + '/' + name
-				tuples.push([dep, child, dep.path])
-			}
-		})
-		tuple = tuples[i++]
-	}
+  // generate tree breadth first
+  while (tuple) {
+    var pkg = tuple[0]
+    var node = tuple[1]
+    var path = tuple[2]
+    var loaded = pkg.hasOwnProperty('dependencies')
+    if (loaded) each(pkg.dependencies, function(dep, name){
+      if (pkgs.indexOf(dep) >= 0) {
+        node.nodes.push(green(relative(path, dep.path)))
+      } else {
+        pkgs.push(dep)
+        var child = {
+          label: blue(name) + grey('@' + dep.version),
+          nodes: []
+        }
+        node.nodes.push(child)
+        dep.path = path + '/' + name
+        tuples.push([dep, child, dep.path])
+      }
+    })
+    tuple = tuples[i++]
+  }
 
-	console.log(require('archy')(root, '\u001b[90m  '))
+  console.log(require('archy')(root, '\u001b[90m  '))
 }
 
 program.parse(process.argv)
@@ -378,9 +378,9 @@ program.parse(process.argv)
 if (!program.args.length) program.help()
 
 function list (args) {
-	return args.split(',')
+  return args.split(',')
 }
 
 function print(txt){
-	process.stdout.write((txt || '') + '\n')
+  process.stdout.write((txt || '') + '\n')
 }

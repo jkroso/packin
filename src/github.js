@@ -12,9 +12,9 @@ var latest = lift(require('github-latest'))
  */
 
 exports.tag = function(user, repo){
-	return latest(user, repo).then(function(tag){
-		return tag == null ? 'master' : tag
-	})
+  return latest(user, repo).then(function(tag){
+    return tag == null ? 'master' : tag
+  })
 }
 
 /**
@@ -27,10 +27,10 @@ exports.tag = function(user, repo){
  */
 
 exports.url = function(user, repo){
-	return latest(user, repo).then(function(tag){
-		return 'http://github.com/' 
-			+ user + '/' 
-			+ repo + '/tarball/'
-			+ (tag || 'master')
-	})
+  return latest(user, repo).then(function(tag){
+    return 'http://github.com/' 
+      + user + '/' 
+      + repo + '/tarball/'
+      + (tag || 'master')
+  })
 }

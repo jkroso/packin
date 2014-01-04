@@ -24,11 +24,11 @@ module.exports = lift(deps)
  */
 
 function deps(dir, files, p, d){
-	return reduce(files, function(depsA, file){
-		var json = readJSON(join(dir, file))
-		var depsB = normalize[file](json)
-		return merge(depsA, depsB, p, d)
-	}, {})
+  return reduce(files, function(depsA, file){
+    var json = readJSON(join(dir, file))
+    var depsB = normalize[file](json)
+    return merge(depsA, depsB, p, d)
+  }, {})
 }
 
 /**
@@ -41,15 +41,15 @@ function deps(dir, files, p, d){
  */
 
 var merge = lift(function(deps, json, p, d){
-	d && softMerge(deps, json.development)
-	p && softMerge(deps, json.production)
-	return deps
+  d && softMerge(deps, json.development)
+  p && softMerge(deps, json.production)
+  return deps
 })
 
 function softMerge(a, b){
-	for (var k in b) {
-		if (!(k in a)) a[k] = b[k]
-	}
+  for (var k in b) {
+    if (!(k in a)) a[k] = b[k]
+  }
 }
 
 /**
@@ -60,19 +60,19 @@ function softMerge(a, b){
  */
 
 var normalize = map({
-	'deps.json': function(json){ return json },
-	'component.json': function(json){
-		return {
-			production: normalizeComponent(json.dependencies),
-			development: normalizeComponent(json.development)
-		}
-	},
-	'package.json': function(json){
-		return {
-			production: normalizeNpm(json.dependencies),
-			development: normalizeNpm(json.devDependencies)
-		}
-	}
+  'deps.json': function(json){ return json },
+  'component.json': function(json){
+    return {
+      production: normalizeComponent(json.dependencies),
+      development: normalizeComponent(json.development)
+    }
+  },
+  'package.json': function(json){
+    return {
+      production: normalizeNpm(json.dependencies),
+      development: normalizeNpm(json.devDependencies)
+    }
+  }
 }, lift)
 
 /**
@@ -87,56 +87,56 @@ var normalize = map({
  */
 
 function normalizeComponent(deps){
-	if (!deps) return null
-	var res = {}
-	each(deps, function(tag, name){
-		var parts = name.split('/')
-		var user = parts[0]
-		var repo = parts[1]
-		res[repo] = tag == '*'
-			? defer(function(){ return github(user, repo) })
-			: 'http://github.com/' + name + '/tarball/' + tag
-	})
-	return res
+  if (!deps) return null
+  var res = {}
+  each(deps, function(tag, name){
+    var parts = name.split('/')
+    var user = parts[0]
+    var repo = parts[1]
+    res[repo] = tag == '*'
+      ? defer(function(){ return github(user, repo) })
+      : 'http://github.com/' + name + '/tarball/' + tag
+  })
+  return res
 }
 
 function normalizeNpm(deps){
-	if (!deps) return
-	for (var name in deps) {
-		deps[name] = npmUrl(name, deps[name])
-	}
-	return deps
+  if (!deps) return
+  for (var name in deps) {
+    deps[name] = npmUrl(name, deps[name])
+  }
+  return deps
 }
 
 function npmUrl(name, version){
-	// explicit version
-	if (semver.valid(version)) {
-		return 'http://registry.npmjs.org/'+name+'/-/'+name+'-'+version+'.tgz'
-	}
-	// straight up url
-	if (/^\w+:\/\//.test(version)) {
-		return version
-	}
-	// github shorthand
-	if (/^(\w+\/[\w\-]+)(?:#(.+))?/.test(version)) {
-		var version = RegExp.$2
-		var name = RegExp.$1
-		return version
-			? 'http://github.com/' + name + '/tarball/' + version
-			: defer(function(){ return github.apply(null, name.split('/')) })
-	}
+  // explicit version
+  if (semver.valid(version)) {
+    return 'http://registry.npmjs.org/'+name+'/-/'+name+'-'+version+'.tgz'
+  }
+  // straight up url
+  if (/^\w+:\/\//.test(version)) {
+    return version
+  }
+  // github shorthand
+  if (/^(\w+\/[\w\-]+)(?:#(.+))?/.test(version)) {
+    var version = RegExp.$2
+    var name = RegExp.$1
+    return version
+      ? 'http://github.com/' + name + '/tarball/' + version
+      : defer(function(){ return github.apply(null, name.split('/')) })
+  }
 
-	// validate name
-	if (/\//.test(name)) {
-		throw new Error('invalid package name ' + name)
-	}
+  // validate name
+  if (/\//.test(name)) {
+    throw new Error('invalid package name ' + name)
+  }
 
-	// resolve semver lazily
-	return defer(function(){
-		return npm(name, version)
-	})
+  // resolve semver lazily
+  return defer(function(){
+    return npm(name, version)
+  })
 }
 
 function readJSON(file){
-	return fs.readFile(file, 'utf-8').then(JSON.parse)
+  return fs.readFile(file, 'utf-8').then(JSON.parse)
 }

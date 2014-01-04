@@ -30,17 +30,17 @@ Package.cache = Object.create(null)
  */
 
 Package.create = lift(function(url){
-	var location = /^\w+:\//.test(url)  // remote?
-		? ns + url.replace(/^\w+:\//, '') // remove protocol
-		: url                             // local filesystem
-	var pkg = Package.cache[location]
-	if (!pkg) {
-		pkg = Package.cache[location] = new Package
-		pkg.local = url == location
-		pkg.location = location
-		pkg.url = url
-	}
-	return pkg
+  var location = /^\w+:\//.test(url)  // remote?
+    ? ns + url.replace(/^\w+:\//, '') // remove protocol
+    : url                             // local filesystem
+  var pkg = Package.cache[location]
+  if (!pkg) {
+    pkg = Package.cache[location] = new Package
+    pkg.local = url == location
+    pkg.location = location
+    pkg.url = url
+  }
+  return pkg
 })
 
 /**
@@ -59,9 +59,9 @@ Package.prototype.folder = 'deps'
  */
 
 lazy(Package.prototype, 'dependencies', function(){
-	return map(
-		deps(this.location, this.files, this.production, this.development),
-		Package.create)
+  return map(
+    deps(this.location, this.files, this.production, this.development),
+    Package.create)
 }, 'enumerable')
 
 /**
@@ -70,16 +70,16 @@ lazy(Package.prototype, 'dependencies', function(){
  */
 
 lazy(Package.prototype, 'files', function(){
-	var files = this.possibleFiles
-	var dir = this.location
-	return when(this.loaded, function(){
-		return filter(files, function(file){
-			return fs.exists(join(dir, file))
-		}).then(function(files){
-			log.debug('%p uses %j for meta data', dir, files)
-			return files
-		})
-	})
+  var files = this.possibleFiles
+  var dir = this.location
+  return when(this.loaded, function(){
+    return filter(files, function(file){
+      return fs.exists(join(dir, file))
+    }).then(function(files){
+      log.debug('%p uses %j for meta data', dir, files)
+      return files
+    })
+  })
 }, 'enumerable')
 
 /**
@@ -88,19 +88,19 @@ lazy(Package.prototype, 'files', function(){
  */
 
 lazy(Package.prototype, 'loaded', function(){
-	var self = this
-	return if_(fs.exists(this.location),
-		function(){
-			log.info('exists', '%p', self.url)
-			self.isNew = false
-		},
-		function(){
-			if (self.local) throw new Error('missing: ' + self.location)
-			self.isNew = true
-			return download(self.url, self.location).then(function(){
-				log.info('installed', self.url)
-			})
-		})
+  var self = this
+  return if_(fs.exists(this.location),
+    function(){
+      log.info('exists', '%p', self.url)
+      self.isNew = false
+    },
+    function(){
+      if (self.local) throw new Error('missing: ' + self.location)
+      self.isNew = true
+      return download(self.url, self.location).then(function(){
+        log.info('installed', self.url)
+      })
+    })
 })
 
 /**
@@ -111,13 +111,13 @@ lazy(Package.prototype, 'loaded', function(){
  */
 
 Package.prototype.install = function(){
-	var seen = {}
-	return function load(pkg){
-		if (!pkg.isNew && !pkg.retrace) return // don't recur
-		if (seen[pkg.location]) return
-		seen[pkg.location] = true
-		return each(pkg.dependencies, load)
-	}(this)
+  var seen = {}
+  return function load(pkg){
+    if (!pkg.isNew && !pkg.retrace) return // don't recur
+    if (seen[pkg.location]) return
+    seen[pkg.location] = true
+    return each(pkg.dependencies, load)
+  }(this)
 }
 
 /**
@@ -126,10 +126,10 @@ Package.prototype.install = function(){
  */
 
 lazy(Package.prototype, 'version', function(){
-	var m = (/github\.com\/(?:[^\/]+\/){2}tarball\/(.+)/.exec(this.url))
-		|| (/registry\.npmjs\.org\/[^\/]+\/-\/.*-(.*)\.tgz/.exec(this.url))
-	if (m) return m[1]
-	return '*'
+  var m = (/github\.com\/(?:[^\/]+\/){2}tarball\/(.+)/.exec(this.url))
+    || (/registry\.npmjs\.org\/[^\/]+\/-\/.*-(.*)\.tgz/.exec(this.url))
+  if (m) return m[1]
+  return '*'
 })
 
 /**
@@ -140,30 +140,30 @@ lazy(Package.prototype, 'version', function(){
  */
 
 Package.prototype.link = function(from){
-	var to = this.location
-	function correct(path){
-		if (path != to) {
-			log.debug('correcting symlink %p', from)
-			fs.unlinkSync(from)
-			fs.symlinkSync(to, from)
-		}
-	}
-	function error(e){
-		switch (e.code) {
-			case 'ENOENT': // no file
-				return fs.symlink(to, from).then(null, function(e){
-					if (e.code == 'EEXIST') return // must be a race going on
-					throw new Error(e.stack)
-				})
-			case 'EINVAL': // not a symlink
-				log.info('warning', 'not linking %p since its a hard file', from)
-				break
-			default: throw new Error(e.stack)
-		}
-	}
-	return fs.readlink(from).then(correct, error)
+  var to = this.location
+  function correct(path){
+    if (path != to) {
+      log.debug('correcting symlink %p', from)
+      fs.unlinkSync(from)
+      fs.symlinkSync(to, from)
+    }
+  }
+  function error(e){
+    switch (e.code) {
+      case 'ENOENT': // no file
+        return fs.symlink(to, from).then(null, function(e){
+          if (e.code == 'EEXIST') return // must be a race going on
+          throw new Error(e.stack)
+        })
+      case 'EINVAL': // not a symlink
+        log.info('warning', 'not linking %p since its a hard file', from)
+        break
+      default: throw new Error(e.stack)
+    }
+  }
+  return fs.readlink(from).then(correct, error)
 }
 
 var if_ = lift(function(bool, a, b){
-	return bool ? a() : b()
+  return bool ? a() : b()
 })
