@@ -34,23 +34,10 @@ function install(url, to, opts){
     pkg.development = true
   }
 
-  var seen = {}
-  function addLinks(pkg){
-    if (seen[pkg.location]) return
-    seen[pkg.location] = true
-    var folder = join(pkg.location, pkg.folder)
-    return mkdir(folder).then(function(){
-      return each(pkg.dependencies, function(dep, name){
-        return dep
-          .link(join(folder, name))
-          .then(addLinks.bind(null, dep))
-      })
-    })
-  }
-
+  // install
   return pkg.install().then(function(){
-    if (url == to) return addLinks(pkg)
-    return pkg.link(to).then(addLinks.bind(null, pkg))
+    if (url == to) return addLinks(pkg, {})
+    return pkg.link(to).then(addLinks.bind(null, pkg, {}))
   }, undo).yeild(pkg)
 }
 
@@ -61,6 +48,27 @@ function mkdir(folder){
 }
 
 var defaultFiles = Package.prototype.possibleFiles
+
+/**
+ * recursively symlink to dependencies
+ *
+ * @param {Package} pkg
+ * @param {Object} seen
+ * @return {Promise}
+ */
+
+function addLinks(pkg, seen){
+  if (seen[pkg.location]) return
+  seen[pkg.location] = true
+  var folder = join(pkg.location, pkg.folder)
+  return mkdir(folder).then(function(){
+    return each(pkg.dependencies, function(dep, name){
+      return dep
+        .link(join(folder, name))
+        .then(addLinks.bind(null, dep, seen))
+    })
+  })
+}
 
 /**
  * undo everything
