@@ -5,6 +5,7 @@ var fs = require('lift-result/fs')
 var log = require('./src/logger')
 var join = require('path').join
 var rm = require('rm-r/sync')
+var copy = require('cp-r')
 
 module.exports = install
 
@@ -36,6 +37,7 @@ function install(url, to, opts){
 
   // install
   return pkg.install().then(function(){
+    if (opts.copy) return copyDeps(pkg, pkg.location, {})
     if (url == to) return addLinks(pkg, {})
     return pkg.link(to).then(addLinks.bind(null, pkg, {}))
   }, undo).yeild(pkg)
@@ -50,7 +52,8 @@ function mkdir(folder){
 var defaultFiles = Package.prototype.possibleFiles
 
 /**
- * recursively symlink to dependencies
+ * recursively symlink to dependencies to their
+ * proper location
  *
  * @param {Package} pkg
  * @param {Object} seen
@@ -67,6 +70,35 @@ function addLinks(pkg, seen){
         .link(join(folder, name))
         .then(addLinks.bind(null, dep, seen))
     })
+  })
+}
+
+/**
+ * cp -r dependencies to their proper location
+ *
+ * @param {Package} pkg
+ * @param {String} location
+ * @param {Object} seen
+ * @return {Promise}
+ */
+
+function copyDeps(pkg, location, seen){
+  // avoid mutating parents
+  seen = Object.create(seen)
+  var folder = join(location, pkg.folder)
+  return each(pkg.dependencies, function(dep, name){
+    if (seen[dep.location]) return
+    seen[dep.location] = true
+    var path = join(folder, name)
+    return fs.lstat(path)
+      .then(function(s){
+        if (s.isSymbolicLink()) rm.file(path)
+      }, function ignoreErr(){})
+      .then(function(){
+        return copy(dep.location, path).then(function(){
+          return copyDeps(dep, path, seen)
+        })
+      })
   })
 }
 

@@ -141,9 +141,14 @@ describe('cleanup', function(){
 	// localhost install directory
 	var lh = cache + '/localhost:3000'
 	var dir = __dirname+'/error'
-	afterEach(function(done){
+	after(function(done){
 		rmdir(__dirname+'/error/deps', done)
 	})
+
+	after(function(done){
+		rmdir(__dirname+'/simple/deps', done)
+	})
+
 	it('should remove all new dependencies', function(done){
 		install(__dirname+'/simple').then(function(logA){
 			exists(lh + '/equals/master').should.be.true
@@ -337,6 +342,25 @@ describe('npm errors', function(){
 				done()
 			})
 		})
+	})
+})
+
+describe('copy', function(){
+	after(function(done){
+		rmdir(__dirname + '/simple/node_modules', done)
+	})
+
+	it('should copy deps rather than symlink', function(done){
+		install(__dirname + '/simple', {
+			folder: 'node_modules',
+			copy: true,
+		}).then(function(){
+			var file = require.resolve('./simple')
+			delete require.cache[file]
+			require(file)({},{}).should.be.true
+			var s = fs.lstatSync(__dirname + '/simple/node_modules/equals')
+			s.isSymbolicLink().should.be.false
+		}).node(done)
 	})
 })
 

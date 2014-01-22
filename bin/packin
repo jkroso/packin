@@ -276,6 +276,7 @@ program
   .option('-R, --no-retrace', 'don\'t step into existing dependencies')
   .option('-t, --tree', 'render the dependency tree on completion')
   .option('-c, --clean', 'remove unused dependencies')
+  .option('-C, --copy', 'copy dependencies instead of symlinking them')
   .on('--help', function () {
     print('  Examples:')
     print('')

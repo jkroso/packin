@@ -19,7 +19,8 @@
     "result": "~0.4.6",
     "untar": "~0.2.7",
     "archy": "~0.0.2",
-    "rm-r": "~1.0.1"
+    "rm-r": "~1.0.1",
+    "cp-r": "~0.1.0"
   },
   "devDependencies": {
     "fs-equals": "~0.2.6",
