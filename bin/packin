@@ -47,10 +47,13 @@ program
     print('  Examples:')
     print('')
     print('    # explicit')
-    print('    $ packin add graph:http://github.com/jkroso/graph/tarball/master')
+    print('    $ packin add solicit:http://github.com/jkroso/solicit/tarball/0.0.6')
     print('')
     print('    # from github')
-    print('    $ packin add jkroso/graph')
+    print('    $ packin add jkroso/solicit')
+    print('')
+    print('    # from github')
+    print('    $ packin add solicit@0.0.6')
     print('')
   })
   .action(function(){
@@ -170,9 +173,10 @@ function parseKeyValue(kv){
   }
 
   // npm.org
-  if (/^(.+)(?:@(.*))?$/.exec(value)) {
-    var pkg = RegExp.$1
-    var version = RegExp.$2 || '*'
+  if (/^(\S+)$/.exec(value)) {
+    value = value.split('@')
+    var pkg = value[0]
+    var version = value[1] || '*'
     return npm.url(pkg, version).then(function(url){
       return [pkg, url]
     })
