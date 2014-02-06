@@ -89,18 +89,16 @@ lazy(Package.prototype, 'files', function(){
 
 lazy(Package.prototype, 'loaded', function(){
   var self = this
-  return if_(fs.exists(this.location),
-    function(){
-      log.info('exists', '%p', self.url)
-      self.isNew = false
-    },
-    function(){
-      if (self.local) throw new Error('missing: ' + self.location)
-      self.isNew = true
-      return download(self.url, self.location).then(function(){
-        log.info('installed', self.url)
-      })
+  return if_(fs.exists(this.location), function then(){
+    log.info('exists', '%p', self.url)
+    self.isNew = false
+  }, function otherwise(){
+    if (self.local) throw new Error('missing: ' + self.location)
+    self.isNew = true
+    return download(self.url, self.location).then(function(){
+      log.info('installed', self.url)
     })
+  })
 })
 
 /**
