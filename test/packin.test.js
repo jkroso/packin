@@ -227,7 +227,10 @@ describe('component.json', function(){
   })
 
   it('should install subdependencies', function(done){
-    install(dir, {folder: 'node_modules'}).read(function(){
+    install(dir, {
+      folder: 'node_modules',
+      files: ['component.json']
+    }).read(function(){
       exists(dir + '/node_modules/toposort').should.be.true
       require(dir).should.be.a('function')
       exec('node '+__dirname+'/component/examples/basic', function(e, out, err){

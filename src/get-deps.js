@@ -118,7 +118,7 @@ function npmUrl(name, version){
     return version
   }
   // github shorthand
-  if (/^(\w+\/[\w\-]+)(?:#(.+))?/.test(version)) {
+  if (/^([^\/#]+\/[^\/#]+)(?:#(.+))?/.test(version)) {
     var version = RegExp.$2
     var name = RegExp.$1
     return version
