@@ -297,7 +297,7 @@ program
   .action(function(dep, to, options){
     options.files = options.meta // alias
     if (!program.verbose) log.ignore = /exists/
-    log.center = 13
+    log.center = 15
 
     if (fs.existsSync(options.folder)) {
       if (options.clean) rm(options.folder) // rm(1) -r
@@ -319,14 +319,14 @@ program
       }, onError)
     }
 
-    if (to == null) options.help()
-
     // install `dep` to `to`
     parseKeyValue(dep).then(function(kv){
+      if (to == null) to = 'node_modules/' + kv[0]
       var url = kv[1]
       var name = path.resolve(to)
       // just production deps by default
       options.development = options.development || false
+      fs.mkdirSync(path.dirname(name))
       return install(url, name, options)
     }).read(null, onError)
 
