@@ -40,7 +40,7 @@ function install(url, to, opts){
     if (opts.copy) return copyDeps(pkg, pkg.location, {})
     if (url == to) return addLinks(pkg, {})
     return pkg.link(to).then(addLinks.bind(null, pkg, {}))
-  }, undo).yeild(pkg)
+  }, undo).yield(pkg)
 }
 
 function mkdir(folder){
