@@ -135,6 +135,7 @@ program
   .description('expand shorthand to a full url')
   .action(function(short){
     parseKeyValue(short).read(function(url){
+      log.status()
       console.log(url[1])
     })
   })
@@ -205,6 +206,7 @@ program
 
 var show = lift(function(key, obj){
   if (!Object.keys(obj).length) return
+  log.status()
   print(format('  %s', blue(key)))
   return each(obj, function(url, key){
     if (/github\.com\/([^\/]+)\/([^\/]+)\/tarball\/(.+)/.test(url)) {
@@ -213,6 +215,7 @@ var show = lift(function(key, obj){
     if (/registry\.npmjs\.org\/[^\/]+\/-\/(.*)-(.*)\.tgz/.test(url)) {
       url = RegExp.$1 + '@' + RegExp.$2
     }
+    log.status()
     print(format('    %s %p', blue(key), url))
   }).then(print)
 })
@@ -370,6 +373,7 @@ function render(pkg, deep){
     tuple = tuples[i++]
   }
 
+  log.status()
   console.log(require('archy')(root, '\u001b[90m  '))
 }
 
