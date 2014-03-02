@@ -6,8 +6,8 @@ exports.format = fmt
 exports.center = 0
 
 exports.disable = function(){
-  exports.error = 
-  exports.warn = 
+  exports.error =
+  exports.warn =
   exports.info =
   exports.debug = function(){}
 }
@@ -24,16 +24,16 @@ exports.disable()
 
 function space(type, msg, color){
   var pad = Math.max(3, exports.center - type.length)
-  return Array(pad).join(' ') 
-    + '\033[' + (color || '36') + 'm' 
-    + type + '\033[90m: ' 
+  return Array(pad).join(' ')
+    + '\033[' + (color || '36') + 'm'
+    + type + '\033[90m: '
     + msg.replace(/\n/g, '\n' + Array(pad + type.length + 2).join(' '))
     + '\033[m\n'
 }
 
 /**
  * write to stdout
- * 
+ *
  * @param {String} type
  * @param {String} msg
  */
@@ -43,6 +43,7 @@ function out(type, msg){
   if (exports._status) clearLine()
   msg = fmt.apply(this, [].slice.call(arguments, 1))
   process.stdout.write(space(type, msg))
+  if (exports._status) process.stdout.write(exports._status)
 }
 
 exports.status = function(value){
@@ -57,7 +58,7 @@ function clearLine(){
 
 /**
  * write to stderr
- * 
+ *
  * @param {String} type
  * @param {String} msg
  */
@@ -93,8 +94,43 @@ exports.enable = function(level){
 }
 
 /**
+ * hack in some HTTP logging
+ */
+
+exports.trackHTTP = function(){
+  var http = require('http')
+  var request = http.request
+  http.request = function(){
+    exports.incPending()
+    return request.apply(this, arguments)
+      .on('close', exports.decPending)
+  }
+  process.on('exit', function(){
+    exports.status() // clear status line
+  })
+}
+
+exports.incPending = function(){
+  writePending(++exports.pending)
+}
+
+exports.decPending = function(){
+  writePending(--exports.pending)
+}
+
+exports.pending = 0
+
+function writePending(pending){
+  exports.status(blue('  » ' + pending + ' pending'))
+}
+
+function blue(text){
+  return '\033[36m' + text + '\033[m'
+}
+
+/**
  * replace tokens with formated values
- * 
+ *
  * @param {String} str
  * @param {Arguments} args
  * @param {Number} i

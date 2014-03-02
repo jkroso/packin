@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
+var log = require('../src/logger')
+log.trackHTTP()
+
 var Package = require('../src/package')
 var github = require('../src/github')
 var deps = require('../src/get-deps')
 var each = require('foreach/async')
-var log = require('../src/logger')
 var program = require('commander')
 var lift = require('lift-result')
 var npm = require('../src/npm')
@@ -105,7 +107,6 @@ program
         var user = RegExp.$1
         var repo = RegExp.$2
         var oldtag = RegExp.$3
-        writePending(++pending)
         return github.tag(user, repo).then(function(tag){
           var id = user + '/' + repo
           logUpdate(id, oldtag, tag)
@@ -115,7 +116,6 @@ program
       if (/registry\.npmjs\.org\/([^\/]+)\/-\/[^\/]+-(.+)\.tgz/.test(url)) {
         var id = RegExp.$1
         var tag = RegExp.$2
-        writePending(++pending)
         return npm.tag(id, '>=' + tag).then(function(latest){
           logUpdate(id, tag, latest)
           return 'http://registry.npmjs.org/'+id+'/-/'+id+'-'+latest+'.tgz'
@@ -127,13 +127,8 @@ program
     function logUpdate(id, old, now){
       if (old != now) log.info(id, '%s -> %s', old, now)
       else log.info(id, '%s', old)
-      writePending(--pending)
     }
   })
-
-function writePending(pending){
-  log.status(blue('  » ' + pending + ' pending'))
-}
 
 program
   .command('url <shorthand>')
