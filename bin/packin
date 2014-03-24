@@ -82,7 +82,6 @@ program
   .action(function(dep){
     log.center = 17
     var json = getJSON()
-    var pending = 0
     if (dep) {
       var deps = json.production && dep in json.production
         ? json.production
@@ -102,7 +101,7 @@ program
       log.status()
     })
 
-    function update(url, key){
+    function update(url){
       if (/github\.com\/([^\/]+)\/([^\/]+)\/tarball\/(.*)/.test(url)) {
         var user = RegExp.$1
         var repo = RegExp.$2
@@ -324,7 +323,8 @@ program
       var name = path.resolve(to)
       // just production deps by default
       options.development = options.development || false
-      fs.mkdirSync(path.dirname(name))
+      try { fs.mkdirSync(path.dirname(name)) }
+      catch (e) { /* ignore */ }
       return install(url, name, options)
     }).read(null, onError)
 
@@ -343,7 +343,7 @@ function cleanup(){
   })
 }
 
-function render(pkg, deep){
+function render(pkg){
   var root = { label: blue('.'), nodes: [] }
   var tuple = [pkg, root, '']
   var tuples = []
@@ -383,8 +383,4 @@ if (!program.args.length) program.help()
 
 function list (args) {
   return args.split(',')
-}
-
-function print(txt){
-  process.stdout.write((txt || '') + '\n')
 }
