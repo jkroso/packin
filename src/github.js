@@ -28,8 +28,8 @@ exports.tag = function(user, repo){
 
 exports.url = function(user, repo){
   return latest(user, repo).then(function(tag){
-    return 'http://github.com/' 
-      + user + '/' 
+    return 'http://github.com/'
+      + user + '/'
       + repo + '/tarball/'
       + (tag || 'master')
   })
