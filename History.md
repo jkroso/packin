@@ -1,4 +1,11 @@
 
+0.4.2 / 2014-05-18
+==================
+
+ * fix: respect --no-retrace when symlinking
+ * fix: logging examples
+ * fix: handle existing dep folders
+
 0.4.1 / 2014-03-02
 ==================
 

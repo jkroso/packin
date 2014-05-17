@@ -1,6 +1,6 @@
 {
   "name": "packin",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "a simple package manager",
   "dependencies": {
     "github-latest": "jkroso/github-latest#0.3.0",
