@@ -46,17 +46,17 @@ program
   .description('add a package to this packages dependencies')
   .option('-d, --development', 'add as a development dependency')
   .on('--help', function(){
-    print('  Examples:')
-    print('')
-    print('    # explicit')
-    print('    $ packin add solicit:http://github.com/jkroso/solicit/tarball/0.0.6')
-    print('')
-    print('    # from github')
-    print('    $ packin add jkroso/solicit')
-    print('')
-    print('    # from github')
-    print('    $ packin add solicit@0.0.6')
-    print('')
+    console.log('  Examples:')
+    console.log('')
+    console.log('    # explicit')
+    console.log('    $ packin add solicit:http://github.com/jkroso/solicit/tarball/0.0.6')
+    console.log('')
+    console.log('    # from github')
+    console.log('    $ packin add jkroso/solicit')
+    console.log('')
+    console.log('    # from github')
+    console.log('    $ packin add solicit@0.0.6')
+    console.log('')
   })
   .action(function(){
     var options = arguments[arguments.length - 1]
@@ -195,7 +195,7 @@ program
   .action(function(){
     log.disable()
     var files = Package.create(cwd).files
-    print('')
+    console.log('')
     var pro = deps(cwd, files, true, false)
     var dev = deps(cwd, files, false, true)
     show('production', pro).read(function(){
@@ -206,7 +206,7 @@ program
 var show = lift(function(key, obj){
   if (!Object.keys(obj).length) return
   log.status()
-  print(format('  %s', blue(key)))
+  console.log(format('  %s', blue(key)))
   return each(obj, function(url, key){
     if (/github\.com\/([^\/]+)\/([^\/]+)\/tarball\/(.+)/.test(url)) {
       url = RegExp.$1 + '/' + RegExp.$2 + '@' + RegExp.$3
@@ -215,8 +215,8 @@ var show = lift(function(key, obj){
       url = RegExp.$1 + '@' + RegExp.$2
     }
     log.status()
-    print(format('    %s %p', blue(key), url))
-  }).then(print)
+    console.log(format('    %s %p', blue(key), url))
+  }).then(console.log)
 })
 
 function blue(text){
@@ -279,17 +279,17 @@ program
   .option('-c, --clean', 'remove unused dependencies')
   .option('-C, --copy', 'copy dependencies instead of symlinking them')
   .on('--help', function () {
-    print('  Examples:')
-    print('')
-    print('    # to emulate npm install')
-    print('    $ packin install -m package.json')
-    print('')
-    print('    # to use components and npm packages')
-    print('    $ packin install -m component.json,package.json')
-    print('')
-    print('    # install something arbitrary to a subfolder')
-    print('    $ packin install npm obsolete_stuff')
-    print('')
+    console.log('  Examples:')
+    console.log('')
+    console.log('    # to emulate npm install')
+    console.log('    $ packin install -m package.json')
+    console.log('')
+    console.log('    # to use components and npm packages')
+    console.log('    $ packin install -m component.json,package.json')
+    console.log('')
+    console.log('    # install something arbitrary to a subfolder')
+    console.log('    $ packin install npm obsolete_stuff')
+    console.log('')
   })
   .action(function(dep, to, options){
     options.files = options.meta // alias
