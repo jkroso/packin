@@ -63,6 +63,7 @@ var defaultFiles = Package.prototype.possibleFiles
 function addLinks(pkg, seen){
   if (seen[pkg.location]) return
   seen[pkg.location] = true
+  if (!pkg.isNew && !pkg.retrace) return
   var folder = join(pkg.location, pkg.folder)
   return mkdir(folder).then(function(){
     return each(pkg.dependencies, function(dep, name){
