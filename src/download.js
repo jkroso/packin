@@ -57,7 +57,9 @@ var inflate = lift(function(res, url){
   if (/(deflate|gzip)$/.test(meta['content-type'])
   || (/\.t?gz$/.test(meta['content-disposition']))
   || (/registry\.npmjs\.org/).test(url)) {
-    return res.pipe(zlib.createUnzip())
+    var unzip = zlib.createUnzip()
+    res.on('error', function(e){unzip.emit('error', e)})
+    return res.pipe(unzip)
   }
   return res
 })
