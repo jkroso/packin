@@ -30,8 +30,8 @@ function getVersion(json){
  */
 
 exports.url = function(name, spec){
-  return latest(name, spec).then(getDist, function(res){
-    throw new Error(res.message + ' ' + name)
+  return latest(name, spec).then(getDist, function(r){
+    throw new Error(r.message + ' - while querying npm for "' + name + '"')
   })
 }
 
