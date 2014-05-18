@@ -55,10 +55,9 @@ function http(url, dir){
 var inflate = lift(function(res, url){
   var meta = res.headers
   if (/(deflate|gzip)$/.test(meta['content-type'])
+  || (/\.t?gz$/.test(meta['content-disposition']))
   || (/registry\.npmjs\.org/).test(url)) {
-    return res.pipe(zlib.createGunzip()).on('error', function(){
-      throw new Error('gzip fucked up on ' + url)
-    })
+    return res.pipe(zlib.createUnzip())
   }
   return res
 })
