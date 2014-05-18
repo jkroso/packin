@@ -1,4 +1,11 @@
 
+0.4.3 / 2014-05-18
+==================
+
+ * fix: forward stream errors
+ * fix: unziping files from github
+ * improve error message when npm fails
+
 0.4.2 / 2014-05-18
 ==================
 
