@@ -92,6 +92,7 @@ function normalizeComponent(deps){
     var parts = name.split('/')
     var user = parts[0]
     var repo = parts[1]
+    if (!repo) throw new Error('invalid component.json entry "' + name + '"')
     res[repo] = tag == '*'
       ? defer(function(){ return github(user, repo) })
       : 'http://github.com/' + name + '/tarball/' + tag
