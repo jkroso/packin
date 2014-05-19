@@ -7,7 +7,6 @@ var lift = require('lift-result')
 var join = require('path').join
 var npm = require('./npm').url
 var semver = require('semver')
-var log = require('./logger')
 var each = require('foreach')
 var map = require('map')
 

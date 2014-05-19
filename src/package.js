@@ -75,9 +75,6 @@ lazy(Package.prototype, 'files', function(){
   return when(this.loaded, function(){
     return filter(files, function(file){
       return fs.exists(join(dir, file))
-    }).then(function(files){
-      log.debug('%p uses %j for meta data', dir, files)
-      return files
     })
   })
 }, 'enumerable')
