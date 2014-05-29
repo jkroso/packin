@@ -30,8 +30,8 @@ Package.cache = Object.create(null)
  */
 
 Package.create = lift(function(url){
-  var location = /^\w+:\//.test(url)  // remote?
-    ? ns + url.replace(/^\w+:\//, '') // remove protocol
+  var location = /^\S+:\//.test(url)  // remote?
+    ? ns + url.replace(/^\S+:\//, '') // remove protocol
     : url                             // local filesystem
   var pkg = Package.cache[location]
   if (!pkg) {

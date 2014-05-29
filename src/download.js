@@ -18,7 +18,7 @@ module.exports = download
  */
 
 function download(url, dir){
-  var protocol = url.match(/^(\w+):\/\//)[1]
+  var protocol = url.match(/^(\S+):\/\//)[1]
   log.info('fetching', url)
   if (protocol in download) return download[protocol](url, dir)
   throw new TypeError('unsupported protocol ' + protocol)

@@ -114,7 +114,7 @@ function npmUrl(name, version){
     return 'http://registry.npmjs.org/'+name+'/-/'+name+'-'+version+'.tgz'
   }
   // straight up url
-  if (/^\w+:\/\//.test(version)) {
+  if (/^\S+:\/\//.test(version)) {
     return version
   }
   // github shorthand
