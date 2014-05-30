@@ -295,10 +295,6 @@ program
     if (!program.verbose) log.ignore = /exists/
     log.center = 15
 
-    if (fs.existsSync(options.folder)) {
-      fs.utimesSync(options.folder, new Date, new Date) // touch(1)
-    }
-
     // handle interuption
     process.on('SIGINT', function(){
       console.error()
@@ -311,6 +307,8 @@ program
     if (dep == null) {
       return install(cwd, options).read(function(pkg){
         if (options.tree) render(pkg)
+        // touch folder for Make
+        fs.utimesSync(options.folder, new Date, new Date)
       }, onError)
     }
 
