@@ -22,9 +22,6 @@ Package.cache = Object.create(null)
 /**
  * create a package unless one has already been created
  *
- * TODO: consider returning a promise for a pre-loaded package
- * since you pretty much always want to load them anyway
- *
  * @param {String} url
  * @return {Package}
  */
@@ -59,9 +56,11 @@ Package.prototype.folder = 'deps'
  */
 
 lazy(Package.prototype, 'dependencies', function(){
-  return map(
-    deps(this.location, this.files, this.production, this.development),
-    Package.create)
+  var urls = deps(this.location,
+                  this.files,
+                  this.production,
+                  this.development)
+  return map(urls, Package.create)
 }, 'enumerable')
 
 /**
@@ -108,10 +107,12 @@ lazy(Package.prototype, 'loaded', function(){
 Package.prototype.install = function(){
   var seen = {}
   return function load(pkg){
-    if (!pkg.isNew && !pkg.retrace) return // don't recur
     if (seen[pkg.location]) return
     seen[pkg.location] = true
-    return each(pkg.dependencies, load)
+    return when(pkg.loaded, function(){
+      if (!pkg.isNew && !pkg.retrace) return // don't recur
+      return each(pkg.dependencies, load)
+    })
   }(this)
 }
 
