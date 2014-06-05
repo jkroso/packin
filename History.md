@@ -1,4 +1,13 @@
 
+0.4.4 / 2014-06-06
+==================
+
+ * fix: always recur into new packages
+ * fix: match funny protocols like http+git
+ * touch directory after install completes rather than before
+ * remove --clean option
+ * remove some logging
+
 0.4.3 / 2014-05-18
 ==================
 
