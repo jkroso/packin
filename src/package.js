@@ -44,11 +44,15 @@ Package.create = lift(function(url){
  * default config
  */
 
-Package.prototype.possibleFiles = ['deps.json', 'package.json', 'component.json']
+Package.prototype.possibleFiles = [
+  'dependencies.json',
+  'package.json',
+  'component.json'
+]
+Package.prototype.folder = 'dependencies'
 Package.prototype.development = false
 Package.prototype.production = true
 Package.prototype.retrace = true
-Package.prototype.folder = 'deps'
 
 /**
  * a map of `this` packages dependencies

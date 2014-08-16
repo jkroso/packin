@@ -59,7 +59,7 @@ function softMerge(a, b){
  */
 
 var normalize = map({
-  'deps.json': function(json){ return json },
+  'dependencies.json': function(json){ return json },
   'component.json': function(json){
     return {
       production: normalizeComponent(json.dependencies),

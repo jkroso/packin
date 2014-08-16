@@ -14,12 +14,8 @@ fi
 
 declare -a json=(
   '{'
-  '  "folder": "node_modules",'
-  '  "meta": ['
-  '    "package.json",'
-  '    "component.json",'
-  '    "deps.json"'
-  '  ]'
+  '  "folder": "dependencies",'
+  '  "meta": ["dependencies.json"]'
   '}'
 )
 

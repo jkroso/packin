@@ -24,7 +24,7 @@ function install(url, to, opts){
   // configure
   Package.cache = Object.create(null)
   Package.prototype.retrace = opts.retrace !== false
-  Package.prototype.folder = opts.folder || 'deps'
+  Package.prototype.folder = opts.folder || 'dependencies'
   Package.prototype.possibleFiles = opts.files || defaultFiles
   Package.prototype.development = opts.development === true
   Package.prototype.production = opts.production !== false
@@ -65,11 +65,14 @@ function addLinks(pkg, seen){
   seen[pkg.location] = true
   if (!pkg.isNew && !pkg.retrace) return
   var folder = join(pkg.location, pkg.folder)
-  return mkdir(folder).then(function(){
-    return each(pkg.dependencies, function(dep, name){
-      return dep
-        .link(join(folder, name))
-        .then(addLinks.bind(null, dep, seen))
+  return pkg.dependencies.then(function(deps){
+    if (!Object.keys(deps).length) return
+    return mkdir(folder).then(function(){
+      return each(deps, function(dep, name){
+        return dep
+          .link(join(folder, name))
+          .then(addLinks.bind(null, dep, seen))
+      })
     })
   })
 }

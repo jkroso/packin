@@ -35,7 +35,7 @@ var cache = process.env.HOME + '/.packin/-'
 
 var filterOpts = {
   name: function(name){
-    return !(/deps|node_modules/).test(name)
+    return !(/dependencies|node_modules/).test(name)
   }
 }
 
@@ -50,23 +50,22 @@ beforeEach(function(done){
 describe('install', function(){
   var dir = __dirname+'/simple'
   afterEach(function(done){
-    rmdir(__dirname+'/simple/deps', done)
+    rmdir(__dirname+'/simple/dependencies', done)
   })
 
   it('should install dependencies', function(done){
     install(dir).then(function(){
       return equal(
-        __dirname+'/simple/deps/equals',
+        __dirname+'/simple/dependencies/equals',
         __dirname+'/packages/equals/master',
-        filterOpts
-      )
+        filterOpts)
     }).node(done)
   })
 
   it('should install subdependencies', function(done){
     install(__dirname+'/simple').then(function(){
       return equal(
-        __dirname+'/simple/deps/equals/deps/type',
+        __dirname+'/simple/dependencies/equals/dependencies/type',
         __dirname+'/packages/type/master',
         filterOpts
       )
@@ -77,22 +76,22 @@ describe('install', function(){
     install(__dirname+'/simple', {
       production:true
     }).then(function(){
-      exists(__dirname+'/simple/deps/type').should.be.false
+      exists(__dirname+'/simple/dependencies/type').should.be.false
     }).node(done)
   })
 
   it('but should include them by default', function(done){
     install(__dirname+'/simple').then(function(){
-      exists(__dirname+'/simple/deps/type').should.be.true
+      exists(__dirname+'/simple/dependencies/type').should.be.true
     }).node(done)
   })
 
   it('should fix misdirected symlinks', function(done){
     install(dir).then(function(){
-      fs.unlinkSync(dir + '/deps/equals')
-      fs.symlinkSync('/some/no/good/path.coffee', dir + '/deps/equals')
+      fs.unlinkSync(dir + '/dependencies/equals')
+      fs.symlinkSync('/some/no/good/path.coffee', dir + '/dependencies/equals')
       return install(dir).then(function(){
-        fs.readlinkSync(dir + '/deps/equals').should.not.include('no/good')
+        fs.readlinkSync(dir + '/dependencies/equals').should.not.include('no/good')
       })
     }).node(done)
   })
@@ -101,38 +100,38 @@ describe('install', function(){
     install(dir).read(function(pkg){
       pkg.should.be.an.instanceOf(require('../src/package'))
       pkg.dependencies.value.should.include.keys('equals', 'type')
-      rmdir(dir + '/deps', done)
+      rmdir(dir + '/dependencies', done)
     })
   })
 
   it('should pick the meta data file with the most data', function(done){
     var dir = __dirname + '/priority'
     install(dir).read(function(log){
-      exists(dir + '/deps/mocha').should.be.true
-      exists(dir + '/deps/mocha/deps/equals').should.be.true
-      exists(dir + '/deps/mocha/deps/type').should.be.true
-      rmdir(dir + '/deps', done)
+      exists(dir + '/dependencies/mocha').should.be.true
+      exists(dir + '/dependencies/mocha/dependencies/equals').should.be.true
+      exists(dir + '/dependencies/mocha/dependencies/type').should.be.true
+      rmdir(dir + '/dependencies', done)
     })
   })
 
   it('should link local packages', function(done){
     var dir = __dirname + '/local-packages'
     install(dir).read(function(log){
-      var files = fs.readdirSync(dir + '/deps')
+      var files = fs.readdirSync(dir + '/dependencies')
       files.should.include('equals')
       files.should.include('type')
       files.should.include('local')
-      rmdir(dir + '/deps', done)
+      rmdir(dir + '/dependencies', done)
     })
   })
 
   it('should handle cyclic dependency graphs', function(done){
     var dir = __dirname + '/cyclic'
     install(dir).read(function(pkg){
-      fs.readdirSync(dir + '/deps').should.eql(['a'])
-      fs.readdirSync(dir + '/deps/a/deps').should.eql(['b'])
-      fs.readdirSync(dir + '/deps/a/deps/b/deps').should.eql(['a'])
-      rmdir(dir + '/deps', done)
+      fs.readdirSync(dir + '/dependencies').should.eql(['a'])
+      fs.readdirSync(dir + '/dependencies/a/dependencies').should.eql(['b'])
+      fs.readdirSync(dir + '/dependencies/a/dependencies/b/dependencies').should.eql(['a'])
+      rmdir(dir + '/dependencies', done)
     }, done)
   })
 })
@@ -142,11 +141,11 @@ describe('cleanup', function(){
   var lh = cache + '/localhost:3000'
   var dir = __dirname+'/error'
   after(function(done){
-    rmdir(__dirname+'/error/deps', done)
+    rmdir(__dirname+'/error/dependencies', done)
   })
 
   after(function(done){
-    rmdir(__dirname+'/simple/deps', done)
+    rmdir(__dirname+'/simple/dependencies', done)
   })
 
   it('should remove all new dependencies', function(done){
@@ -168,15 +167,15 @@ describe('cleanup', function(){
 describe('merging', function(){
   var dir = __dirname+'/merging'
   afterEach(function(done){
-    rmdir(__dirname+'/merging/deps', done)
+    rmdir(__dirname+'/merging/dependencies', done)
   })
 
   it('should merge dependencies from different files', function(done){
     install(dir, {
       files: ['deps.json', 'package.json']
     }).then(function(log){
-      exists(dir + '/deps/equals').should.be.true
-      exists(dir + '/deps/type').should.be.true
+      exists(dir + '/dependencies/equals').should.be.true
+      exists(dir + '/dependencies/type').should.be.true
     }).node(done)
   })
 
@@ -184,9 +183,9 @@ describe('merging', function(){
     install(dir, {
       files: ['deps.json', 'package.json']
     }).then(function(log){
-      exists(dir + '/deps/equals').should.be.true
-      exists(dir + '/deps/type').should.be.true
-      readLink(dir + '/deps/equals').should.not.equal(dir + '/deps/type')
+      exists(dir + '/dependencies/equals').should.be.true
+      exists(dir + '/dependencies/type').should.be.true
+      readLink(dir + '/dependencies/equals').should.not.equal(dir + '/dependencies/type')
     }).node(done)
   })
 })

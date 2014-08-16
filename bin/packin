@@ -61,7 +61,7 @@ program
   .action(function(){
     var options = arguments[arguments.length - 1]
     var args = program.args.slice(0, -1)
-    var file = cwd + '/deps.json'
+    var file = cwd + '/dependencies.json'
     var json = getJSON(file)
     var deps = options.development
       ? json.development || (json.development = {})
@@ -179,13 +179,13 @@ function parseKeyValue(kv){
 }
 
 function getJSON(file){
-  file || (file = cwd + '/deps.json')
+  file || (file = cwd + '/dependencies.json')
   if (!fs.existsSync(file)) return {}
   return JSON.parse(fs.readFileSync(file, 'utf8'))
 }
 
 function saveJSON(json, file){
-  file || (file = cwd + '/deps.json')
+  file || (file = cwd + '/dependencies.json')
   fs.writeFileSync(file, JSON.stringify(json, null, 2) + '\n')
 }
 
@@ -270,13 +270,13 @@ program
 program
   .command('install [dep] [to]')
   .description('install packages')
-  .option('-d, --development', 'install development dependencies')
-  .option('-p, --production', 'install production dependencies')
   .option('-f, --folder <dir>', 'name of the directory for installed packages', defaults.folder)
   .option('-m, --meta <files>', 'list of meta files to read', list, defaults.meta)
   .option('-R, --no-retrace', 'don\'t step into existing dependencies')
-  .option('-t, --tree', 'render the dependency tree on completion')
   .option('-c, --copy', 'copy dependencies instead of symlinking them')
+  .option('-t, --tree', 'render the dependency tree on completion')
+  .option('-d, --development', 'install development dependencies')
+  .option('-p, --production', 'install production dependencies')
   .on('--help', function () {
     console.log('  Examples:')
     console.log('')
