@@ -1,6 +1,6 @@
 {
   "name": "packin",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "a simple package manager",
   "dependencies": {
     "github-latest": "jkroso/github-latest#0.3.0",
@@ -15,12 +15,12 @@
     "commander": "2.1.0",
     "when-all": "~0.4.8",
     "solicit": "0.0.7",
-    "semver": "~2.2.1",
-    "result": "~1.0.1",
+    "semver": "~3.0.1",
+    "result": "~1.0.3",
     "untar": "~0.2.9",
     "archy": "~0.0.2",
     "rm-r": "~1.0.2",
-    "cp-r": "~0.1.1"
+    "cp-r": "~0.1.2"
   },
   "devDependencies": {
     "fs-equals": "~0.2.6",

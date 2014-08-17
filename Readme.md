@@ -12,9 +12,7 @@ Here is a few interesting design decisions:
 
 ## Installation
 
-_With npm_  
-
-    $ npm install packin --global
+First install [node](http://nodejs.org/download/). Then run: `npm install packin --global`
 
 ## API
 
