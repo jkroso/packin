@@ -216,7 +216,7 @@ var show = lift(function(key, obj){
     }
     log.status()
     console.log(format('    %s %p', blue(key), url))
-  }).then(console.log)
+  }).then(function(){ console.log() })
 })
 
 function blue(text){
