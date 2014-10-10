@@ -198,9 +198,9 @@ program
     console.log('')
     var pro = deps(cwd, files, true, false)
     var dev = deps(cwd, files, false, true)
-    show('production', pro).read(function(){
-      show('development', dev).read()
-    })
+    show('production', pro).then(function(){
+      return show('development', dev)
+    }).read()
   })
 
 var show = lift(function(key, obj){
