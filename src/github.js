@@ -1,4 +1,5 @@
 
+var get = require('solicit/node').get
 var lift = require('lift-result/cps')
 var latest = lift(require('github-latest'))
 
@@ -33,4 +34,22 @@ exports.url = function(user, repo){
       + repo + '/tarball/'
       + (tag || 'master')
   })
+}
+
+/**
+ * Get a url for the latest commit
+ *
+ * @param {String} user
+ * @param {String} repo
+ * @return {Result} String
+ */
+
+exports.head = function(user, repo){
+  return get('https://api.github.com')
+    .path('repos', user, repo, '/git/refs/heads/master')
+    .then(function(body){
+      return 'http://github.com/'
+        + user + '/' + repo
+        + '/tarball/' + body.object.sha.slice(0, 7)
+    })
 }

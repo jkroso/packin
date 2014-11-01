@@ -1,6 +1,6 @@
 
 var reduce = require('reduce/series')
-var github = require('./github').url
+var github = require('./github').head
 var defer = require('result/defer')
 var fs = require('lift-result/fs')
 var lift = require('lift-result')
@@ -113,10 +113,12 @@ function npmUrl(name, version){
   if (semver.valid(version)) {
     return 'http://registry.npmjs.org/'+name+'/-/'+name+'-'+version+'.tgz'
   }
+
   // straight up url
   if (/^\S+:\/\//.test(version)) {
     return version
   }
+
   // github shorthand
   if (/^([^\/#]+\/[^\/#]+)(?:#(.+))?/.test(version)) {
     var version = RegExp.$2
