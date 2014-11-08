@@ -1,7 +1,20 @@
-
+var username = process.env.GITHUB_USERNAME
+var password = process.env.GITHUB_PASSWORD
+var semver = require('semver-compare')
 var get = require('solicit/node').get
-var lift = require('lift-result/cps')
-var latest = lift(require('github-latest'))
+
+var request = get('https://api.github.com')
+
+if (username && password) request.auth(username, password)
+
+function findLatest(tags){ return tags.map(getName).sort(semver)[0] }
+function getName(tag){ return tag.name }
+
+function latestVersion(user, repo) {
+  return request.clone()
+    .path('repos', user, repo, 'tags')
+    .then(findLatest)
+}
 
 /**
  * get the latest tag for `name` which matches `spec`
@@ -13,7 +26,7 @@ var latest = lift(require('github-latest'))
  */
 
 exports.tag = function(user, repo){
-  return latest(user, repo).then(function(tag){
+  return latestVersion(user, repo).then(function(tag){
     return tag == null ? 'master' : tag
   })
 }
@@ -28,7 +41,7 @@ exports.tag = function(user, repo){
  */
 
 exports.url = function(user, repo){
-  return latest(user, repo).then(function(tag){
+  return latestVersion(user, repo).then(function(tag){
     return 'http://github.com/'
       + user + '/'
       + repo + '/tarball/'
@@ -45,7 +58,7 @@ exports.url = function(user, repo){
  */
 
 exports.head = function(user, repo){
-  return get('https://api.github.com')
+  return request.clone()
     .path('repos', user, repo, '/git/refs/heads/master')
     .then(function(body){
       return 'http://github.com/'
