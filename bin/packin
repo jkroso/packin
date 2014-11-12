@@ -314,9 +314,9 @@ program
 
     // install `dep` to `to`
     parseKeyValue(dep).then(function(kv){
-      if (to == null) to = 'node_modules/' + kv[0]
-      var url = kv[1]
+      if (to == null) to = options.folder + '/' + kv[0]
       var name = path.resolve(to)
+      var url = kv[1]
       // just production deps by default
       options.development = options.development || false
       try { fs.mkdirSync(path.dirname(name)) }
