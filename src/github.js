@@ -7,7 +7,7 @@ var request = get('https://api.github.com')
 
 if (username && password) request.auth(username, password)
 
-function findLatest(tags){ return tags.map(getName).sort(semver)[0] }
+function findLatest(tags){ return tags.map(getName).sort(semver).pop() }
 function getName(tag){ return tag.name }
 
 function latestVersion(user, repo) {
