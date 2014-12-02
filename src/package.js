@@ -115,9 +115,14 @@ Package.prototype.install = function(){
     seen[pkg.location] = true
     return when(pkg.loaded, function(){
       if (!pkg.isNew && !pkg.retrace) return // don't recur
-      return each(pkg.dependencies, load)
+      return each(pkg.dependencies, load).then(null, function(error){
+        // trace location of package which caused the error
+        throw new Error(pkg.location + ' ↴\n' + error.message)
+      })
     })
-  }(this)
+  }(this).then(null, function(error){
+    throw new Error('There was a problem installing a dependency\n' + error.message)
+  })
 }
 
 /**
