@@ -308,6 +308,7 @@ program
       return install(cwd, options).read(function(pkg){
         if (options.tree) render(pkg)
         // touch folder for Make
+        if (!fs.existsSync(options.folder)) return
         fs.utimesSync(options.folder, new Date, new Date)
       }, onError)
     }
