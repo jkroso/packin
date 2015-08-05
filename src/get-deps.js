@@ -128,7 +128,7 @@ function npmUrl(name, version){
   }
 
   // validate name
-  if (/\//.test(name)) {
+  if (/\//.test(name) && name[0] != '@') {
     throw new Error('invalid package name ' + name)
   }
 
