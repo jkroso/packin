@@ -42,12 +42,12 @@ function run_install_script(json, dir)
                                     : ""))
   hook == "" && return nothing
   PATH = ENV["PATH"] * ":" * joinpath(dir, "node_modules", ".bin")
-  env = Dict(:PATH => PATH,
-             :npm_package_name => json["name"],
-             :npm_package_version => json["version"],
-             :npm_lifecycle_event => "install")
+  env = Dict("PATH" => PATH,
+             "npm_package_name" => json["name"],
+             "npm_package_version" => json["version"],
+             "npm_lifecycle_event" => "install")
   cmd = setenv(@eval(@cmd $hook), merge(ENV, env))
-  cd(()-> run(cmd), dir)
+  cd(()-> run(pipeline(cmd, stderr=DevNull)), dir)
 end
 
 function linkpackage(from, to)
