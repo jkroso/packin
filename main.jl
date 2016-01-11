@@ -16,7 +16,7 @@ function install(dir::AbstractString, progress, cache=Dict(); development=false)
     get(json, "dependencies", Dict())
   end
 
-  @sync for (name, spec) in dependencies 
+  @sync for (name, spec) in dependencies
     @async begin
       path = if ismatch(r"^file:", spec)
         joinpath(dir, spec[6:end])
@@ -89,8 +89,12 @@ function download(name, spec, cache)
     if !ispath(path)
       if ismatch(r"^git(?:\+ssh|https?)?://", url)
         m = match(r"#([^/]+)$", url)
-        branch = m == nothing ? "master" : m[1]
-        run(`git clone $url $path --depth 1 --branch $branch`)
+        branch = "master"
+        if m != nothing
+          branch = m[1]
+          url = url[1:m.offset - 1]
+        end
+        run(pipeline(`git clone $url $path --depth 1 --branch $branch`, stderr=DevNull))
       else
         mkpath(path)
         t = tempname()
