@@ -1,6 +1,0 @@
-{
-	"production": {
-		"equals": "http://localhost:3000/equals/master",
-		"failing": "http://localhost:3000/failing/master"
-	}
-}

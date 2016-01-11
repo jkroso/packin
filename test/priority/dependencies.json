@@ -1,5 +1,0 @@
-{
-	"production": {
-		"mocha": "http://localhost:3000/mocha/master"
-	}
-}

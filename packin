@@ -1,0 +1,37 @@
+#!/usr/bin/env julia
+@require "github.com/jkroso/AnsiColor.jl@update-syntax" cyan
+@require "github.com/docopt/DocOpt.jl" docopt
+@require "./main" install
+
+const usage = """
+
+Usage:
+  packin [options]
+
+Options:
+
+  -h, --help     output usage information
+  -V, --version  output the version number
+
+"""
+
+docopt(usage, version=v"0.0.0")
+
+const clearline = b"\033[2K\033[0G"
+
+type Progress
+  pending::UInt16
+end
+
+p = Progress(0)
+
+loop = @schedule while p.pending > 0
+  sleep(1/60) # 60 fps
+  write(STDOUT, clearline, cyan("  » $(p.pending) pending"))
+end
+
+install(pwd(), p; development=true)
+
+wait(loop)
+
+write(STDOUT, clearline)

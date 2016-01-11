@@ -1,8 +1,0 @@
-{
-	"production": {
-		"equals": "http://localhost:3000/equals/master"
-	},
-	"development": {
-		"type": "http://localhost:3000/type/master"
-	}
-}

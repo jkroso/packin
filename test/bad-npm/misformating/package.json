@@ -1,6 +1,0 @@
-{
-	"name": "mis-format",
-	"dependencies": {
-    "find": "http://github.com/component/find/tarball/0.0.1"
-	}
-}
