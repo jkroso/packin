@@ -17,7 +17,7 @@ Options:
 
 docopt(usage, version=v"0.0.0")
 
-const clearline = b"\033[2K\033[0G"
+const clearline = "\033[2K\033[0G"
 
 type Progress
   pending::UInt16
@@ -27,7 +27,7 @@ p = Progress(0)
 
 loop = @schedule while p.pending > 0
   sleep(1/60) # 60 fps
-  write(STDOUT, clearline, cyan("  » $(p.pending) pending"))
+  write(STDOUT, cyan("$clearline  » $(p.pending) pending"))
 end
 
 install(pwd(), p; development=true)
