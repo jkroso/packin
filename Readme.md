@@ -6,7 +6,8 @@
 
 1. Install [Julia](//github.com/JuliaLang/julia)
 2. Install [Kip.jl](//github.com/jkroso/Kip.jl)
-3. `git clone https://github.com/jkroso/packin && make -C packin install`
+3. `echo '@require "github.com/jkroso/Jest.jl"' >> ~/.juliarc.jl`
+4. `git clone https://github.com/jkroso/packin && make -C packin install`
 
 ## Usage
 
