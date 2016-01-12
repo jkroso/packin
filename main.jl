@@ -9,12 +9,9 @@ function install(dir::AbstractString, progress, cache=Dict(); development=false)
   progress.pending += 1
 
   json = open(parseJSON, joinpath(dir, "package.json"))
-  dependencies = if development
-    merge(get(json, "dependencies", Dict()),
-          get(json, "devDependencies", Dict()))
-  else
-    get(json, "dependencies", Dict())
-  end
+  dependencies = merge(get(json, "dependencies", Dict()),
+                       get(json, "peerDependencies", Dict()))
+  development && merge!(dependencies, get(json, "devDependencies", Dict()))
 
   @sync for (name, spec) in dependencies
     @async begin
