@@ -9,6 +9,8 @@
 3. `echo '@require "github.com/jkroso/Jest.jl"' >> ~/.juliarc.jl`
 4. `git clone https://github.com/jkroso/packin && make -C packin install`
 
+Then to update it you just need to run `cd ./packin && git pull origin master`
+
 ## Usage
 
 `packin` is designed as a drop in replacement for `npm install`. It takes no arguments and has no options.
