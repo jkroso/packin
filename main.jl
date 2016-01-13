@@ -25,8 +25,6 @@ function install(dir::AbstractString, progress, cache=Dict(); development=false)
     end
   end
 
-  run_install_script(json, dir)
-
   # unofficially its possible for modules to depend on themselves.
   # Some numskulls take advantage of this (babel-runtime) so we need
   # to replicate that feature
@@ -34,6 +32,7 @@ function install(dir::AbstractString, progress, cache=Dict(); development=false)
   mkpath(dirname(link))
   islink(link) || symlink(dir, link)
 
+  run_install_script(json, dir)
   progress.pending -= 1
 end
 
