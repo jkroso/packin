@@ -27,6 +27,13 @@ function install(dir::AbstractString, progress, cache=Dict(); development=false)
 
   run_install_script(json, dir)
   progress.pending -= 1
+
+  # there is always one who needs special treatment ae
+  if json["name"] == "babel-runtime"
+    link = joinpath(tempdir(), "node_modules", "babel-runtime")
+    mkpath(dirname(link))
+    islink(link) || symlink(dir, link)
+  end
 end
 
 # spec at docs.npmjs.com/misc/scripts
