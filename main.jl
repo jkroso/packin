@@ -26,14 +26,15 @@ function install(dir::AbstractString, progress, cache=Dict(); development=false)
   end
 
   run_install_script(json, dir)
-  progress.pending -= 1
 
-  # there is always one who needs special treatment ae
-  if json["name"] == "babel-runtime"
-    link = joinpath(tempdir(), "node_modules", "babel-runtime")
-    mkpath(dirname(link))
-    islink(link) || symlink(dir, link)
-  end
+  # unofficially its possible for modules to depend on themselves.
+  # Some numskulls take advantage of this (babel-runtime) so we need
+  # to replicate that feature
+  link = joinpath(dir, "node_modules", json["name"])
+  mkpath(dirname(link))
+  islink(link) || symlink(dir, link)
+
+  progress.pending -= 1
 end
 
 # spec at docs.npmjs.com/misc/scripts
