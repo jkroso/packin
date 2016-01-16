@@ -100,12 +100,12 @@ function download(name, spec, cache)
         end
         run(pipeline(`git clone $url $path --depth 1 --branch $branch`, stderr=DevNull))
       else
-        mkpath(path)
-        t = tempname()
         data = GET(url)
-        open(fd -> write(fd, data), t, "w")
-        pipeline(t, `tar --strip-components 1 -xmpf - -C $path`) |> run
-        rm(t)
+        mkpath(path)
+        stdin, proc = open(`tar --strip-components 1 -xmpf - -C $path`, "w")
+        write(stdin, data)
+        close(stdin)
+        wait(proc)
       end
     end
     path
