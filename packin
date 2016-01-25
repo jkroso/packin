@@ -17,6 +17,12 @@ Options:
 
 docopt(usage, version=v"0.0.0")
 
+const rcfile = joinpath(pwd(), ".packinrc.jl")
+const rc = isfile(rcfile) ? Kip.require(rcfile) : Module()
+const spec_cache = (isdefined(rc, :spec_cache)
+                     ? rc.spec_cache
+                     : Dict{Pair,Any}())
+
 const clearline = "\033[2K\033[0G"
 
 type Progress
@@ -30,7 +36,7 @@ loop = @schedule while p.pending > 0
   write(STDOUT, cyan("$clearline  » $(p.pending) pending"))
 end
 
-install(pwd(), p; development=true)
+install(pwd(), p, spec_cache; development=true)
 
 wait(loop)
 

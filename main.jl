@@ -3,9 +3,9 @@
 @require "github.com/JuliaWeb/Requests.jl@9797063" => Requests
 @require "github.com/coiljl/URI@f8831bc" encode
 
-function install(dir::AbstractString, progress, cache=Dict(); development=false)
-  haskey(cache, dir) && return nothing
-  cache[dir] = dir
+function install(dir::AbstractString, progress, spec_cache=Dict(), uri_cache=Dict(); development=false)
+  haskey(uri_cache, dir) && return nothing
+  uri_cache[dir] = dir
   progress.pending += 1
 
   json = open(parseJSON, joinpath(dir, "package.json"))
@@ -13,14 +13,11 @@ function install(dir::AbstractString, progress, cache=Dict(); development=false)
                        get(json, "peerDependencies", Dict()))
   development && merge!(dependencies, get(json, "devDependencies", Dict()))
 
-  @sync for (name, spec) in dependencies
+  @sync for spec in dependencies
     @async begin
-      path = if ismatch(r"^file:", spec)
-        joinpath(dir, spec[6:end])
-      else
-        wait(download(name, spec, cache))
-      end
-      install(path, progress, cache)
+      uri = need(resolve_spec(spec, dir, spec_cache))
+      path = need(isabspath(uri) ? uri : download(uri, uri_cache))
+      install(path, progress, spec_cache, uri_cache)
       linkpackage(dir, path)
     end
   end
@@ -35,6 +32,16 @@ function install(dir::AbstractString, progress, cache=Dict(); development=false)
   run_install_script(json, dir)
   progress.pending -= 1
 end
+
+function resolve_spec(spec, dir, cache)
+  haskey(cache, spec) && return cache[spec]
+  cache[spec] = @schedule(ismatch(r"^file:", spec[2])
+                            ? joinpath(dir, spec[2][6:end])
+                            : toURL(spec...))
+end
+
+need(value) = value
+need(t::Task) = wait(t)
 
 # spec at docs.npmjs.com/misc/scripts
 # TODO: support config
@@ -85,8 +92,7 @@ function getbin(json, dir)
   end
 end
 
-function download(name, spec, cache)
-  url = toURL(name, spec)
+function download(url, cache)
   haskey(cache, url) && return cache[url]
   cache[url] = @schedule begin
     path = joinpath(tempdir(), replace(url, r"^.*://", ""))
