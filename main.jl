@@ -1,7 +1,6 @@
 @require "github.com/jkroso/parse-json@4d9f46b" parse => parseJSON
-@require "github.com/jkroso/SemverQuery.jl@8295bb2" semver_query
+@require "github.com/coiljl/URI@f8831bc" encode encode_component
 @require "github.com/JuliaWeb/Requests.jl@9797063" => Requests
-@require "github.com/coiljl/URI@f8831bc" encode
 
 # Some packages don't declare all their dependencies
 const known_fuckups = Dict(
@@ -142,10 +141,8 @@ function toURL(name, spec)
   end
 
   if ismatch(npm_scoped, name)
-    path = replace(name, r"/", "%2f")
-    versions = parseJSON(GET("http://registry.npmjs.com/$path"))["versions"]
-    version = findmax(semver_query(spec), map(VersionNumber, keys(versions)))
-    return versions[string(version)]["dist"]["tarball"]
+    name = replace(name, r"/", "%2f")
+    spec = encode_component(spec)
   end
 
   parseJSON(GET("http://registry.npmjs.com/$name/$spec"))["dist"]["tarball"]
