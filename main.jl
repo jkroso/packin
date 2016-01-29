@@ -58,7 +58,7 @@ function run_install_script(json, dir)
              "npm_package_version" => json["version"],
              "npm_lifecycle_event" => "install")
   cmd = setenv(@eval(@cmd $hook), merge(ENV, env))
-  cd(()-> run(pipeline(cmd, stderr=DevNull)), dir)
+  cd(()-> run(pipeline(cmd, stderr=DevNull, stdout=DevNull)), dir)
 end
 
 function linkpackage(from, to)
