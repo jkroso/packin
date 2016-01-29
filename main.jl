@@ -3,6 +3,11 @@
 @require "github.com/JuliaWeb/Requests.jl@9797063" => Requests
 @require "github.com/coiljl/URI@f8831bc" encode
 
+# Some packages don't declare all their dependencies
+const known_fuckups = Dict(
+  "pg-cursor" => Dict("pg" => "latest"),
+  "pg-then" => Dict("pg" => "latest"))
+
 function install(dir::AbstractString, progress, spec_cache=Dict(), uri_cache=Dict(); development=false)
   haskey(uri_cache, dir) && return nothing
   uri_cache[dir] = dir
@@ -12,6 +17,7 @@ function install(dir::AbstractString, progress, spec_cache=Dict(), uri_cache=Dic
   dependencies = merge(get(json, "dependencies", Dict()),
                        get(json, "peerDependencies", Dict()))
   development && merge!(dependencies, get(json, "devDependencies", Dict()))
+  haskey(known_fuckups, json["name"]) && merge!(dependencies, known_fuckups[json["name"]])
 
   @sync for spec in dependencies
     @async begin
