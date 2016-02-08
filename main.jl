@@ -100,7 +100,7 @@ end
 function download(url, cache)
   haskey(cache, url) && return cache[url]
   cache[url] = @schedule begin
-    path = joinpath(tempdir(), replace(url, r"^.*://", ""))
+    path = joinpath(homedir(), ".packin", replace(url, r"^.*://", ""))
     if !ispath(path)
       if ismatch(r"^git(?:\+ssh|https?)?://", url)
         m = match(r"#([^/]+)$", url)
