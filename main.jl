@@ -53,10 +53,11 @@ need(t::Task) = wait(t)
 function run_install_script(json, dir)
   scripts = get(json, "scripts", nothing)
   isa(scripts, Associative) || return nothing
-  hook = get(scripts, "install", (ispath(joinpath(dir, "binding.gyp"))
-                                    ? "node-gyp rebuild"
-                                    : ""))
-  hook == "" && return nothing
+  hook = if haskey(scripts, "install") scripts["install"]
+     elseif haskey(scripts, "postinstall") scripts["postinstall"]
+     elseif ispath(joinpath(dir, "binding.gyp")) "node-gyp rebuild"
+     else   "" end
+  isempty(hook) && return nothing
   PATH = ENV["PATH"] * ":" * joinpath(dir, "node_modules", ".bin")
   env = Dict("PATH" => PATH,
              "npm_package_name" => json["name"],
