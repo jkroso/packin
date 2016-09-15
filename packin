@@ -1,7 +1,7 @@
 #!/usr/bin/env julia
 @require "github.com/jkroso/AnsiColor.jl@update-syntax" cyan
 @require "github.com/docopt/DocOpt.jl" docopt
-@require "./main" install
+@require "." install
 
 const usage = """
 

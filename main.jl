@@ -1,6 +1,6 @@
-@require "github.com/jkroso/parse-json@4d9f46b" parse => parseJSON
-@require "github.com/coiljl/URI@f8831bc" encode encode_component
-@require "github.com/JuliaWeb/Requests.jl@9797063" => Requests
+@require "github.com/jkroso/parse-json" parse => parseJSON
+@require "github.com/coiljl/URI" encode encode_component
+@require "github.com/JuliaWeb/Requests.jl" => Requests
 
 # Some packages don't declare all their dependencies
 const known_fuckups = Dict(
